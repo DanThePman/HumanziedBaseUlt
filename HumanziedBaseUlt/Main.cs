@@ -28,7 +28,7 @@ namespace HumanziedBaseUlt
         {
             new UltSpellDataS { championName = "Jinx", SpellStage = 1, DamageMultiplicator = 1.0f, Width = 140f, Delay = 0600f/1000f, Speed = 1700f, Collision = true},
             new UltSpellDataS { championName = "Ashe", SpellStage = 0, DamageMultiplicator = 1.0f, Width = 130f, Delay = 0250f/1000f, Speed = 1600f, Collision = true},
-            //new UltSpellDataS { championName = "Draven", SpellStage = 0, DamageMultiplicator = 0.7f, Width = 160f, Delay = 0400f/1000f, Speed = 2000f, Collision = true},
+            new UltSpellDataS { championName = "Draven", SpellStage = 0, DamageMultiplicator = 0.7f, Width = 160f, Delay = 0400f/1000f, Speed = 2000f, Collision = true},
             new UltSpellDataS { championName = "Ezreal", SpellStage = 0, DamageMultiplicator = 0.7f, Width = 160f, Delay = 1000f/1000f, Speed = 2000f, Collision = false},
             //new UltSpellDataS { championName = "Karthus", SpellStage = 0, DamageMultiplicator = 1.0f, Width = 000f, Delay = 3125f/1000f, Speed = 0000f, Collision = false}
         };
