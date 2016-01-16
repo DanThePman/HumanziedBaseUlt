@@ -186,7 +186,7 @@ namespace HumanziedBaseUlt
                         continue;
                     Chat.Print("OK /" + enemyInst.Sender.ChampionName + "|| " + waitRegMSeconds);
 
-                    if (travelTime > timeLeft + waitRegMSeconds /*&& travelTime - (timeLeft + waitRegMSeconds) < 250*/)
+                    if (travelTime > timeLeft + waitRegMSeconds && travelTime - (timeLeft + waitRegMSeconds) < 250)
                     {
                         Vector3 enemyBaseVec = ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
                         Player.CastSpell(SpellSlot.R, enemyBaseVec);
