@@ -179,8 +179,8 @@ namespace HumanziedBaseUlt
                     // totalEnemyHp + fountainReg * seconds = myDmg
                     
                     float fountainReg = config.Get<CheckBox>("min20").CurrentValue ?
-                        enemy.MaxHealth / 100 * 36.5f
-                        : enemy.MaxHealth / 100 * 8.6f;
+                        enemy.MaxHealth / 100 * 37f
+                        : enemy.MaxHealth / 100 * 8.7f;
                     var waitRegMSeconds = ((myDmg - totalEnemyHp)/fountainReg) *1000;
                     if (waitRegMSeconds < config.Get<Slider>("minDelay").CurrentValue)
                         continue;
