@@ -11,63 +11,21 @@ using SharpDX;
 
 namespace HumanziedBaseUlt
 {
-    class Main
+    class Main : Events
     {
-        class UltSpellDataS
-        {
-            public string championName;
-            public int SpellStage;
-            public float DamageMultiplicator;
-            public float Width;
-            public float Delay;
-            public float Speed;
-            public bool Collision;
-        }
-
-        readonly List<UltSpellDataS> spellDataList = new List<UltSpellDataS>
-        {
-            new UltSpellDataS { championName = "Jinx", SpellStage = 1, DamageMultiplicator = 1.0f, Width = 140f, Delay = 0600f/1000f, Speed = 1700f, Collision = true},
-            new UltSpellDataS { championName = "Ashe", SpellStage = 0, DamageMultiplicator = 1.0f, Width = 130f, Delay = 0250f/1000f, Speed = 1600f, Collision = true},
-            new UltSpellDataS { championName = "Draven", SpellStage = 0, DamageMultiplicator = 0.7f, Width = 160f, Delay = 0400f/1000f, Speed = 2000f, Collision = true},
-            new UltSpellDataS { championName = "Ezreal", SpellStage = 0, DamageMultiplicator = 0.7f, Width = 160f, Delay = 1000f/1000f, Speed = 2000f, Collision = false},
-            //new UltSpellDataS { championName = "Karthus", SpellStage = 0, DamageMultiplicator = 1.0f, Width = 000f, Delay = 3125f/1000f, Speed = 0000f, Collision = false}
-        };
-        private AIHeroClient me = ObjectManager.Player;
-
-
-        public class InvisibleEventArgs : EventArgs
-        {
-            public int StartTime { get; set; }
-            public AIHeroClient sender { get; set; }
-            public float LastHealth { get; set; }
-
-            /// <summary>
-            /// per second
-            /// </summary>
-            public float HealthRegen { get; set; }
-        }
-
-        public delegate void OnEnemyInvisibleH(InvisibleEventArgs args);
-        public event OnEnemyInvisibleH OnEnemyInvisible;
-        protected virtual void FireOnEnemyInvisible(InvisibleEventArgs args)
-        {
-            if (OnEnemyInvisible != null) OnEnemyInvisible(args);
-        }
-
-        public delegate void OnEnemyVisibleH(AIHeroClient sender);
-        public event OnEnemyVisibleH OnEnemyVisible;
-        protected virtual void FireOnEnemyVisible(AIHeroClient sender)
-        {
-            if (OnEnemyVisible != null) OnEnemyVisible(sender);
-        }
-
+        private readonly AIHeroClient me = ObjectManager.Player;
         private Menu config;
+
         public Main()
         {
             config = MainMenu.AddMenu("HumanizedBaseUlts", "huminizedBaseUlts");
             config.Add("on", new CheckBox("Enabled"));
-            config.Add("min20", new CheckBox("20 min passed", false));
+            config.Add("min20", new CheckBox("20 min passed"));
             config.Add("minDelay", new Slider("Minimum required delay", 750, 0, 2500));
+            config.AddLabel("The time to let the enemy regenerate health in base");
+            config.AddSeparator(20);
+            config.Add("fountainReg", new Slider("Enemy regeneration speed", 86, 84, 90));
+            config.Add("fountainRegMin20", new Slider("Enemy regeneration speed after minute 20", 367, 350, 390));
 
             Game.OnUpdate += GameOnOnUpdate;
             Teleport.OnTeleport += TeleportOnOnTeleport;
@@ -75,31 +33,21 @@ namespace HumanziedBaseUlt
             OnEnemyVisible += OnOnEnemyVisible;
         }
 
-        class PortingEnemy
-        {
-            public AIHeroClient Sender { get; set; }
-            public float TotalRegedHealthSinceInvis { get; set; }
-            public int StartTick { get; set; }
-
-            public int Duration { get; set; }
-        }
-
-        readonly List<PortingEnemy> teleportingEnemies = new List<PortingEnemy>(5); 
         private void TeleportOnOnTeleport(Obj_AI_Base sender, Teleport.TeleportEventArgs args)
         {
-            var invisEnemiesEntry = invisEnemiesList.FirstOrDefault(x => x.sender == sender);
+            var invisEnemiesEntry = Listing.invisEnemiesList.FirstOrDefault(x => x.sender == sender);
 
             switch (args.Status)
             {
                 case TeleportStatus.Start:
                     if (invisEnemiesEntry == null)
                         return;
-                    if (teleportingEnemies.All(x => x.Sender != sender))
+                    if (Listing.teleportingEnemies.All(x => x.Sender != sender))
                     {
-                        float lastHpReg = lastEnemyRegens.First(x => x.Key.Equals(sender)).Value;
-                        float invisTime = (Environment.TickCount - invisEnemiesEntry.StartTime) / 1000;
+                        float lastHpReg = Listing.Regeneration.lastEnemyRegens.First(x => x.Key.Equals(sender)).Value;
+                        float invisTime = (Core.GameTickCount - invisEnemiesEntry.StartTime) / 1000;
                         float totalRegedHp = lastHpReg*invisTime;
-                        teleportingEnemies.Add(new PortingEnemy
+                        Listing.teleportingEnemies.Add(new Listing.PortingEnemy
                         {
                             Sender = (AIHeroClient) sender,
                             Duration = args.Duration,
@@ -109,142 +57,123 @@ namespace HumanziedBaseUlt
                     }
                     break;
                 case TeleportStatus.Abort:
-                    var teleportingEnemiesEntry = teleportingEnemies.First(x => x.Sender.Equals(sender));
-                    teleportingEnemies.Remove(teleportingEnemiesEntry);
+                    var teleportingEnemiesEntry = Listing.teleportingEnemies.First(x => x.Sender.Equals(sender));
+                    Listing.teleportingEnemies.Remove(teleportingEnemiesEntry);
                     break;
 
                 case TeleportStatus.Finish:
-                    var teleportingEnemiesEntry2 = teleportingEnemies.First(x => x.Sender.Equals(sender));
-                    Core.DelayAction(() => teleportingEnemies.Remove(teleportingEnemiesEntry2), 5000);
+                    var teleportingEnemiesEntry2 = Listing.teleportingEnemies.First(x => x.Sender.Equals(sender));
+                    Core.DelayAction(() => Listing.teleportingEnemies.Remove(teleportingEnemiesEntry2), 5000);
                     break;
             }
         }
-
-        readonly List<AIHeroClient> visibleEnemies = new List<AIHeroClient>(5);
+              
+        /*enemy appear*/
         private void OnOnEnemyVisible(AIHeroClient sender)
         {
-            visibleEnemies.Add(sender);
-            var invisEntry = invisEnemiesList.First(x => x.sender.Equals(sender));
-            invisEnemiesList.Remove(invisEntry);
-        }
+            Listing.Regeneration.enemyBuffs.Remove(sender);
 
-        readonly List<InvisibleEventArgs> invisEnemiesList = new List<InvisibleEventArgs>(5); 
+            Listing.visibleEnemies.Add(sender);
+            var invisEntry = Listing.invisEnemiesList.First(x => x.sender.Equals(sender));
+            Listing.invisEnemiesList.Remove(invisEntry);
+        }
+        
+        /*enemy disappear*/
         private void OnOnEnemyInvisible(InvisibleEventArgs args)
         {
-            visibleEnemies.Remove(args.sender);
-            invisEnemiesList.Add(args);
+            if (Listing.Regeneration.HasPotionActive(args.sender))
+                Listing.Regeneration.enemyBuffs.Add(args.sender, Listing.Regeneration.GetPotionBuff(args.sender));
+
+            Listing.visibleEnemies.Remove(args.sender);
+            Listing.invisEnemiesList.Add(args);
         }
 
-        private int lastHealthRegenCheck = 0;
-        readonly Dictionary<AIHeroClient, float> lastEnemyHealths = new Dictionary<AIHeroClient, float>(5);
-        readonly Dictionary<AIHeroClient, float> lastEnemyRegens = new Dictionary<AIHeroClient, float>(5);
         private void GameOnOnUpdate(EventArgs args)
         {
             if (!config.Get<CheckBox>("on").CurrentValue)
                 return;
 
-            if (Environment.TickCount - lastHealthRegenCheck >= 1000)
-            {
-                lastHealthRegenCheck = Environment.TickCount;
-                CheckEnemyRegenartions();
-            }
+            config.Get<CheckBox>("min20").CurrentValue = Game.Time > 1200f;
 
-            CheckForInvisibility();          
+            Listing.Regeneration.CheckEnemyBaseRegenartions();
+
+            CheckForInvisibility();
 
             CheckRecallingEnemies();
+
+            //Chat.Print(Game.Time);
         }
 
         private void CheckRecallingEnemies()
         {
-            if (!teleportingEnemies.Any())
-                return;
-
-            foreach (var enemyInst in teleportingEnemies)
+            foreach (var enemyInst in Listing.teleportingEnemies)
             {
                 var enemy = enemyInst.Sender;
-                int endTime = enemyInst.StartTick + enemyInst.Duration;
-                float timeLeft = endTime - Core.GameTickCount;
-                float travelTime = GetUltTravelTime(me);
+                var invisEntry = Listing.invisEnemiesList.First(x => x.sender.Equals(enemy));
 
-                float lastEnemyReg = lastEnemyRegens.First(x => x.Key.Equals(enemy)).Value;
-                float recallHpReg = lastEnemyReg * (enemyInst.Duration / 1000);
-                float regedHealthTillRecallFinished = enemyInst.TotalRegedHealthSinceInvis + recallHpReg;
-                float totalEnemyHp = enemy.Health + regedHealthTillRecallFinished;
+                int recallEndTime = enemyInst.StartTick + enemyInst.Duration;
+                float timeLeft = recallEndTime - Core.GameTickCount;
+                float travelTime = GetUltTravelTime(me);
+                
+                float regedHealthRecallFinished = Algorithm.SimulateHealthRegen(enemy, invisEntry.StartTime, recallEndTime);
+                float totalEnemyHp = enemy.Health + regedHealthRecallFinished;
 
                 float myDmg = Damage.GetBaseUltSpellDamage(enemy, me.ChampionName);
 
-                
                 if (myDmg > totalEnemyHp)
                 {
+                    float fountainReg = GetFountainReg(enemy);
+
                     // totalEnemyHp + fountainReg * seconds = myDmg
-                    
-                    float fountainReg = config.Get<CheckBox>("min20").CurrentValue ?
-                        enemy.MaxHealth / 100 * 37f
-                        : enemy.MaxHealth / 100 * 8.7f;
-                    var waitRegMSeconds = ((myDmg - totalEnemyHp)/fountainReg) *1000;
+                    var waitRegMSeconds = ((myDmg - totalEnemyHp) / fountainReg) * 1000;
                     if (waitRegMSeconds < config.Get<Slider>("minDelay").CurrentValue)
                         continue;
-                    Chat.Print("OK /" + enemyInst.Sender.ChampionName + "|| " + waitRegMSeconds);
+
+                    //Messaging.ProcessInfo(waitRegMSeconds, enemy.ChampionName);
 
                     if (travelTime > timeLeft + waitRegMSeconds && travelTime - (timeLeft + waitRegMSeconds) < 250)
                     {
                         Vector3 enemyBaseVec = ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
                         Player.CastSpell(SpellSlot.R, enemyBaseVec);
-                        teleportingEnemies.Remove(enemyInst);
                     }
                 }
                 else
                 {
-                    Chat.Print(myDmg + "< " + totalEnemyHp + " //" + enemyInst.Sender.ChampionName);
-                    teleportingEnemies.Remove(enemyInst);
+                    //EloBuddy.Messaging.Print(enemy.ChampionName + " not enough dmg: " + myDmg + " < " + totalEnemyHp);
+                    Listing.teleportingEnemies.Remove(enemyInst);
                 }
             }
+        }
+
+        private float GetFountainReg(AIHeroClient enemy)
+        {
+            float regSpeedDefault = config.Get<Slider>("fountainReg").CurrentValue / 10;
+            float regSpeedMin20 = config.Get<Slider>("fountainRegMin20").CurrentValue / 10;
+
+
+            float fountainReg = config.Get<CheckBox>("min20").CurrentValue ? enemy.MaxHealth / 100 * regSpeedMin20 : 
+                                    enemy.MaxHealth / 100 * regSpeedDefault;
+
+            return fountainReg;
         }
 
         private void CheckForInvisibility()
         {
             foreach (var enemy in EntityManager.Heroes.Enemies)
             {
-                if (enemy.IsHPBarRendered && !visibleEnemies.Contains(enemy))
+                if (enemy.IsHPBarRendered && !Listing.visibleEnemies.Contains(enemy))
                 {
                     FireOnEnemyVisible(enemy);
                 }
-                else if (!enemy.IsHPBarRendered && visibleEnemies.Contains(enemy))
+                else if (!enemy.IsHPBarRendered && Listing.visibleEnemies.Contains(enemy))
                 {
                     FireOnEnemyInvisible(new InvisibleEventArgs
                     {
-                        StartTime = Environment.TickCount,
-                        LastHealth = enemy.Health,
+                        StartTime = Core.GameTickCount,
                         sender = enemy,
-                        HealthRegen = lastEnemyRegens.ContainsKey(enemy) ? lastEnemyRegens[enemy] : 3f
+                        StdHealthRegen = Listing.Regeneration.lastEnemyRegens[enemy]
                     });
                 }
-            }
-        }
-
-        private void CheckEnemyRegenartions()
-        {
-            /*Updating last regen list*/
-            if (lastEnemyHealths.Any())
-            {
-                foreach (var enemy in EntityManager.Heroes.Enemies)
-                {
-                    KeyValuePair<AIHeroClient, float> lastEntry = lastEnemyHealths.First(x => x.Key.Equals(enemy));
-                    float dhp = enemy.Health - lastEntry.Value;
-                    if (dhp > float.Epsilon)
-                    {
-                        if (lastEnemyRegens.ContainsKey(enemy))
-                            lastEnemyRegens.Remove(enemy);
-                        lastEnemyRegens.Add(enemy, dhp);
-                    }
-                }
-            }
-
-            /*Updating last health list*/
-            lastEnemyHealths.Clear();
-            foreach (var enemy in EntityManager.Heroes.Enemies)
-            {
-                lastEnemyHealths.Add(enemy, enemy.Health);
             }
         }
 
@@ -253,8 +182,8 @@ namespace HumanziedBaseUlt
             try
             {
                 var targetpos = ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy);
-                float speed = spellDataList.First(x => x.championName == source.ChampionName).Speed;
-                float delay = spellDataList.First(x => x.championName == source.ChampionName).Delay;
+                float speed = Listing.spellDataList.First(x => x.championName == source.ChampionName).Speed;
+                float delay = Listing.spellDataList.First(x => x.championName == source.ChampionName).Delay;
 
 
                 float distance = source.ServerPosition.Distance(targetpos);
