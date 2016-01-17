@@ -146,7 +146,7 @@ namespace HumanziedBaseUlt
                 }
                 else
                 {
-                    //EloBuddy.Messaging.Print(enemy.ChampionName + " not enough dmg: " + myDmg + " < " + totalEnemyHp);
+                    Chat.Print(enemy.ChampionName + " not enough dmg: " + aioDmg + " < " + totalEnemyHp);
                     Listing.teleportingEnemies.Remove(enemyInst);
                 }
             }
