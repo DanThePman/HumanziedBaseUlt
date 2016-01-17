@@ -24,7 +24,7 @@ namespace HumanziedBaseUlt
             config.Add("minDelay", new Slider("Minimum required delay", 750, 0, 2500));
             config.AddLabel("The time to let the enemy regenerate health in base");
             config.AddSeparator(20);
-            config.Add("fountainReg", new Slider("Enemy regeneration speed", 89, 84, 90));
+            config.Add("fountainReg", new Slider("Enemy regeneration speed", 89, 84, 91));
             config.Add("fountainRegMin20", new Slider("Enemy regeneration speed after minute 20", 369, 350, 390));
 
             Listing.allyconfig = config.AddSubMenu("Premades");
@@ -124,33 +124,10 @@ namespace HumanziedBaseUlt
                 float totalEnemyHp = enemy.Health + regedHealthRecallFinished;
                 float fountainReg = GetFountainReg(enemy);
 
-                AIHeroClient ally = Damage.ArePremadesNeeded(enemy, timeLeft, totalEnemyHp, fountainReg);
-
-                if (ally != null && ally == me)
-                {
-                    float allyDmg = Damage.GetBaseUltSpellDamage(enemy, ally);
-
-                    var waitRegMSeconds = ((allyDmg - totalEnemyHp) / fountainReg) * 1000;
-                    if (waitRegMSeconds < config.Get<Slider>("minDelay").CurrentValue)
-                        continue;
-
-                    Messaging.ProcessInfo(waitRegMSeconds, enemy.ChampionName);
-
-                    if (travelTime <= (timeLeft + waitRegMSeconds))
-                    {
-                        Vector3 enemyBaseVec = ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
-                        int delay = (int)Math.Floor(timeLeft + waitRegMSeconds - travelTime);
-                        Core.DelayAction(() => Player.CastSpell(SpellSlot.R, enemyBaseVec), delay);
-                        Listing.teleportingEnemies.Remove(enemyInst);
-                        return;
-                    }
-                }
-
                 var aioDmg = Damage.GetAioDmg(enemy, timeLeft);
 
-                if (ally == null && aioDmg > totalEnemyHp)
+                if (aioDmg > totalEnemyHp)
                 {
-                    Chat.Print("pre");
                     // totalEnemyHp + fountainReg * seconds = myDmg
                     var waitRegMSeconds = ((aioDmg - totalEnemyHp)/fountainReg)*1000;
                     if (waitRegMSeconds < config.Get<Slider>("minDelay").CurrentValue)
@@ -164,10 +141,10 @@ namespace HumanziedBaseUlt
                         {
                             Vector3 enemyBaseVec =
                                 ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
-                            int delay = (int) Math.Floor(timeLeft + waitRegMSeconds - travelTime);
-                            Core.DelayAction(() => Player.CastSpell(SpellSlot.R, enemyBaseVec), delay);
+                            float delay = timeLeft + waitRegMSeconds - travelTime;
+                            Chat.Print(delay);
+                            Core.DelayAction(() => Player.CastSpell(SpellSlot.R, enemyBaseVec), (int)delay);
                             Listing.teleportingEnemies.Remove(enemyInst);
-                            return;
                         }
                     }
                 }

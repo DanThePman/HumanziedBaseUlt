@@ -139,25 +139,25 @@ namespace HumanziedBaseUlt
             {
                 public static string BuffName = "RegenerationPotion";
                 public static string BuffNameCookie = "ItemMiniRegenPotion";
-                public static float RegenRate = 10f;
+                public static float RegenRate = 13f;
                 public static float Duration = 15000;
             }
             public static class RefillablePotion
             {
                 public static string BuffName = "ItemCrystalFlask";
-                public static float RegenRate = 10.42f;
+                public static float RegenRate = 13f;
                 public static float Duration = 12000;
             }
             public static class HuntersPotion
             {
                 public static string BuffName = "ItemCrystalFlaskJungle";
-                public static float RegenRate = 7.5f;
+                public static float RegenRate = 10f;
                 public static float Duration = 8000;
             }
             public static class CorruptingPotion
             {
                 public static string BuffName = "ItemDarkCrystalFlask";
-                public static float RegenRate = 12.5f;
+                public static float RegenRate = 16f;
                 public static float Duration = 12000;
             }
         }

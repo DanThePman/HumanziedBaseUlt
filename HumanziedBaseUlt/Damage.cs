@@ -14,6 +14,7 @@ namespace HumanziedBaseUlt
         /// </summary>
         /// <param name="target"></param>
         /// <param name="timeLeft"></param>
+        /// <param name="totalEnemyHp"></param>
         /// <returns></returns>
         public static float GetAioDmg(AIHeroClient target, float timeLeft)
         {
