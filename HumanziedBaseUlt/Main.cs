@@ -124,7 +124,7 @@ namespace HumanziedBaseUlt
                 float totalEnemyHp = enemy.Health + regedHealthRecallFinished;
                 float fountainReg = GetFountainReg(enemy);
 
-                var premadeHeroesTuple = Damage.GetPremadeDamageHeroes(enemy, timeLeft, totalEnemyHp);
+                var aioDmg = Damage.GetAioDmg(enemy, timeLeft);
                 AIHeroClient ally = Damage.ArePremadesNeeded(enemy, timeLeft, totalEnemyHp, fountainReg);
 
                 if (ally != null && ally == me)
@@ -149,34 +149,31 @@ namespace HumanziedBaseUlt
                         }
                     }
                 }
-                
-                if (premadeHeroesTuple.Item1 != null && premadeHeroesTuple.Item1.Contains(me))
+
+                if (ally == null)
                 {
-                    Chat.Print("pre");
-                    // totalEnemyHp + fountainReg * seconds = myDmg
-                    var waitRegMSeconds = ((premadeHeroesTuple.Item2 - totalEnemyHp) / fountainReg) * 1000;
-                    if (waitRegMSeconds < config.Get<Slider>("minDelay").CurrentValue)
-                        continue;
-
-                    Messaging.ProcessInfo(waitRegMSeconds, enemy.ChampionName);
-
-                    if (travelTime <= (timeLeft + waitRegMSeconds))
+                    if (aioDmg > totalEnemyHp)
                     {
-                        if (!Algorithm.GetCollision(me.ChampionName).Any())
+                        // totalEnemyHp + fountainReg * seconds = myDmg
+                        var waitRegMSeconds = ((aioDmg - totalEnemyHp)/fountainReg)*1000;
+                        if (waitRegMSeconds < config.Get<Slider>("minDelay").CurrentValue)
+                            continue;
+
+                        Messaging.ProcessInfo(waitRegMSeconds, enemy.ChampionName);
+
+                        if (travelTime > timeLeft + waitRegMSeconds && travelTime - (timeLeft + waitRegMSeconds) < 250)
                         {
-                            Vector3 enemyBaseVec = ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
-                            int delay = (int)Math.Floor(timeLeft + waitRegMSeconds - travelTime);
-                            Core.DelayAction(() => Player.CastSpell(SpellSlot.R, enemyBaseVec), delay);
-                            Listing.teleportingEnemies.Remove(enemyInst);
-                            return;
+                            if (!Algorithm.GetCollision(me.ChampionName).Any())
+                            {
+                                Vector3 enemyBaseVec =
+                                    ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
+                                int delay = (int) Math.Floor(timeLeft + waitRegMSeconds - travelTime);
+                                Core.DelayAction(() => Player.CastSpell(SpellSlot.R, enemyBaseVec), delay);
+                                Listing.teleportingEnemies.Remove(enemyInst);
+                                return;
+                            }
                         }
                     }
-                }
-                else
-                {
-                    if (me.Spellbook.GetSpell(SpellSlot.R).IsReady)
-                        Chat.Print(enemy.ChampionName + " not enough dmg: " + premadeHeroesTuple.Item2 + " < " + totalEnemyHp);
-                    Listing.teleportingEnemies.Remove(enemyInst);
                 }
             }
         }

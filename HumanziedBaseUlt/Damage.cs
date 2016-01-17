@@ -14,12 +14,10 @@ namespace HumanziedBaseUlt
         /// </summary>
         /// <param name="target"></param>
         /// <param name="timeLeft"></param>
-        /// <param name="totalEnemyHp"></param>
         /// <returns></returns>
-        public static Tuple<List<AIHeroClient>, float> GetPremadeDamageHeroes(AIHeroClient target, float timeLeft, float totalEnemyHp)
+        public static float GetAioDmg(AIHeroClient target, float timeLeft)
         {
             float dmg = 0;
-            List<AIHeroClient> candidates = new List<AIHeroClient>();
 
             foreach (var ally in EntityManager.Heroes.Allies)
             {
@@ -35,16 +33,12 @@ namespace HumanziedBaseUlt
                         if (canr && intime && !Algorithm.GetCollision(ally.ChampionName).Any())
                         {
                             dmg += GetBaseUltSpellDamage(target, ally);
-                            candidates.Add(ally);
-
-                            if (dmg > totalEnemyHp)
-                                return new Tuple<List<AIHeroClient>, float>(candidates, dmg);
                         }
                     }
                 }
             }
 
-            return null;
+            return dmg;
         }
 
         /// <summary>
