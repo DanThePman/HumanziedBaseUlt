@@ -1,14 +1,28 @@
-﻿using EloBuddy;
+﻿using System.Linq;
+using EloBuddy;
 using EloBuddy.SDK;
+using EloBuddy.SDK.Menu.Values;
 
 namespace HumanziedBaseUlt
 {
     class Damage
     {
-        public static float GetAioDmg(AIHeroClient target)
+        public static float GetAioDmg(AIHeroClient target, float timeLeft)
         {
-            return 0;
+            float dmg = 0;
+            foreach (var source in EntityManager.Heroes.Allies.Where(x => x.IsMe || 
+                                            Listing.allyconfig.Get<CheckBox>(x.ChampionName).CurrentValue))
+            {
+                float travelTime = Algorithm.GetUltTravelTime(source);
+                bool canr = source.Spellbook.GetSpell(SpellSlot.R).IsReady && source.Mana >= 100;
+
+                if (canr && (travelTime < timeLeft || travelTime - timeLeft < 250) && 
+                    !Algorithm.GetCollision(source.ChampionName).Any())
+                        dmg += GetBaseUltSpellDamage(target, source.ChampionName);
+            }
+            return dmg;
         }
+
         public static float GetBaseUltSpellDamage(AIHeroClient target, string sourceChampionName)
         {
             var level = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.R).Level - 1;
