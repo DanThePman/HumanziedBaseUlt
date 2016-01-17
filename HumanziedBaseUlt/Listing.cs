@@ -126,7 +126,7 @@ namespace HumanziedBaseUlt
                     return RegenerationSpellBook.HuntersPotion.RegenRate;
                 }
 
-                return float.NaN;
+                return Single.NaN;
             }
         }
 

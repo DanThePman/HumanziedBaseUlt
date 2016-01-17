@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -23,14 +24,14 @@ namespace HumanziedBaseUlt
             config.Add("minDelay", new Slider("Minimum required delay", 750, 0, 2500));
             config.AddLabel("The time to let the enemy regenerate health in base");
             config.AddSeparator(20);
-            config.Add("fountainReg", new Slider("Enemy regeneration speed", 87, 84, 90));
-            config.Add("fountainRegMin20", new Slider("Enemy regeneration speed after minute 20", 368, 350, 390));
+            config.Add("fountainReg", new Slider("Enemy regeneration speed", 89, 84, 90));
+            config.Add("fountainRegMin20", new Slider("Enemy regeneration speed after minute 20", 369, 350, 390));
 
             Listing.allyconfig = config.AddSubMenu("Premades");
-            foreach (var source in EntityManager.Heroes.Allies.Where(x => !x.IsMe && Listing.spellDataList.Any(y =>
-                x.ChampionName == y.championName)))
+            foreach (var ally in EntityManager.Heroes.Allies)
             {
-                Listing.allyconfig.Add(source.ChampionName, new CheckBox(source.ChampionName));
+                if (Listing.spellDataList.Any(x => x.championName == ally.ChampionName))
+                    Listing.allyconfig.Add(ally.ChampionName + "/Premade", new CheckBox(ally.ChampionName, false));
             }
 
             Game.OnUpdate += GameOnOnUpdate;
@@ -110,7 +111,7 @@ namespace HumanziedBaseUlt
 
         private void CheckRecallingEnemies()
         {
-            foreach (var enemyInst in Listing.teleportingEnemies)
+            foreach (var enemyInst in Listing.teleportingEnemies.OrderBy(x => x.Sender.Health + x.TotalRegedHealthSinceInvis))
             {
                 var enemy = enemyInst.Sender;
                 var invisEntry = Listing.invisEnemiesList.First(x => x.sender.Equals(enemy));
@@ -118,40 +119,73 @@ namespace HumanziedBaseUlt
                 int recallEndTime = enemyInst.StartTick + enemyInst.Duration;
                 float timeLeft = recallEndTime - Core.GameTickCount;
                 float travelTime = Algorithm.GetUltTravelTime(me);
-                
+
                 float regedHealthRecallFinished = Algorithm.SimulateHealthRegen(enemy, invisEntry.StartTime, recallEndTime);
                 float totalEnemyHp = enemy.Health + regedHealthRecallFinished;
+                float fountainReg = GetFountainReg(enemy);
 
-                float aioDmg = Damage.GetAioDmg(enemy, timeLeft);
+                var premadeHeroesTuple = Damage.GetPremadeDamageHeroes(enemy, timeLeft, totalEnemyHp);
+                AIHeroClient ally = Damage.ArePremadesNeeded(enemy, timeLeft, totalEnemyHp, fountainReg);
 
-                if (aioDmg > totalEnemyHp)
+                if (ally != null && ally == me)
                 {
-                    float fountainReg = GetFountainReg(enemy);
+                    float allyDmg = Damage.GetBaseUltSpellDamage(enemy, ally);
 
+                    if (allyDmg > totalEnemyHp)
+                    {
+                        var waitRegMSeconds = ((allyDmg - totalEnemyHp) / fountainReg) * 1000;
+                        if (waitRegMSeconds < config.Get<Slider>("minDelay").CurrentValue)
+                            continue;
+
+                        Messaging.ProcessInfo(waitRegMSeconds, enemy.ChampionName);
+
+                        if (travelTime <= (timeLeft + waitRegMSeconds))
+                        {
+                            Vector3 enemyBaseVec = ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
+                            int delay = (int)Math.Floor(timeLeft + waitRegMSeconds - travelTime);
+                            Core.DelayAction(() => Player.CastSpell(SpellSlot.R, enemyBaseVec), delay);
+                            Listing.teleportingEnemies.Remove(enemyInst);
+                            return;
+                        }
+                    }
+                }
+                
+                if (premadeHeroesTuple.Item1 != null && premadeHeroesTuple.Item1.Contains(me))
+                {
+                    Chat.Print("pre");
                     // totalEnemyHp + fountainReg * seconds = myDmg
-                    var waitRegMSeconds = ((aioDmg - totalEnemyHp) / fountainReg) * 1000;
+                    var waitRegMSeconds = ((premadeHeroesTuple.Item2 - totalEnemyHp) / fountainReg) * 1000;
                     if (waitRegMSeconds < config.Get<Slider>("minDelay").CurrentValue)
                         continue;
 
                     Messaging.ProcessInfo(waitRegMSeconds, enemy.ChampionName);
 
-                    if (travelTime > timeLeft + waitRegMSeconds && travelTime - (timeLeft + waitRegMSeconds) < 250)
+                    if (travelTime <= (timeLeft + waitRegMSeconds))
                     {
                         if (!Algorithm.GetCollision(me.ChampionName).Any())
                         {
                             Vector3 enemyBaseVec = ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
-                            Player.CastSpell(SpellSlot.R, enemyBaseVec);
+                            int delay = (int)Math.Floor(timeLeft + waitRegMSeconds - travelTime);
+                            Core.DelayAction(() => Player.CastSpell(SpellSlot.R, enemyBaseVec), delay);
+                            Listing.teleportingEnemies.Remove(enemyInst);
+                            return;
                         }
                     }
                 }
                 else
                 {
-                    Chat.Print(enemy.ChampionName + " not enough dmg: " + aioDmg + " < " + totalEnemyHp);
+                    if (me.Spellbook.GetSpell(SpellSlot.R).IsReady)
+                        Chat.Print(enemy.ChampionName + " not enough dmg: " + premadeHeroesTuple.Item2 + " < " + totalEnemyHp);
                     Listing.teleportingEnemies.Remove(enemyInst);
                 }
             }
         }
 
+        /// <summary>
+        /// per second
+        /// </summary>
+        /// <param name="enemy"></param>
+        /// <returns></returns>
         private float GetFountainReg(AIHeroClient enemy)
         {
             float regSpeedDefault = config.Get<Slider>("fountainReg").CurrentValue / 10;
