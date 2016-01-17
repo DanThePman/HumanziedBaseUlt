@@ -41,7 +41,7 @@ namespace HumanziedBaseUlt
             {
                 if (lastArgs == args)
                     return;
-                Chat.Print(args + " ult delay: " + delay.ToString());
+                Chat.Print(args + " ult delay: " + delay.ToString() + " ms");
                 lastArgs = args;
             } 
         }
