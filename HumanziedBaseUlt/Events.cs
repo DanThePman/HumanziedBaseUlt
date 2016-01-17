@@ -39,11 +39,10 @@ namespace HumanziedBaseUlt
             /// <param name="args">Champion name</param>
             public static void ProcessInfo(float delay, string args)
             {
-                if (lastArgs.Equals(args))
+                if (lastArgs == args)
                     return;
+                Chat.Print(args + " ult delay: " + delay.ToString());
                 lastArgs = args;
-
-                EloBuddy.Chat.Print(args + " ult delay: " + delay);
             } 
         }
     }

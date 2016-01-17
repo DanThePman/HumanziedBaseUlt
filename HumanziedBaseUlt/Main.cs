@@ -25,7 +25,7 @@ namespace HumanziedBaseUlt
             config.AddLabel("The time to let the enemy regenerate health in base");
             config.AddSeparator(20);
             config.Add("fountainReg", new Slider("Enemy regeneration speed", 86, 84, 90));
-            config.Add("fountainRegMin20", new Slider("Enemy regeneration speed after minute 20", 367, 350, 390));
+            config.Add("fountainRegMin20", new Slider("Enemy regeneration speed after minute 20", 368, 350, 390));
 
             Game.OnUpdate += GameOnOnUpdate;
             Teleport.OnTeleport += TeleportOnOnTeleport;
@@ -93,15 +93,13 @@ namespace HumanziedBaseUlt
             if (!config.Get<CheckBox>("on").CurrentValue)
                 return;
 
-            config.Get<CheckBox>("min20").CurrentValue = Game.Time > 1200f;
+            config.Get<CheckBox>("min20").CurrentValue = Game.Time > 1225f;
 
             Listing.Regeneration.CheckEnemyBaseRegenartions();
 
             CheckForInvisibility();
 
             CheckRecallingEnemies();
-
-            //Chat.Print(Game.Time);
         }
 
         private void CheckRecallingEnemies()
@@ -129,7 +127,7 @@ namespace HumanziedBaseUlt
                     if (waitRegMSeconds < config.Get<Slider>("minDelay").CurrentValue)
                         continue;
 
-                    //Messaging.ProcessInfo(waitRegMSeconds, enemy.ChampionName);
+                    Messaging.ProcessInfo(waitRegMSeconds, enemy.ChampionName);
 
                     if (travelTime > timeLeft + waitRegMSeconds && travelTime - (timeLeft + waitRegMSeconds) < 250)
                     {
