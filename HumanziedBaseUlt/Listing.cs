@@ -57,8 +57,8 @@ namespace HumanziedBaseUlt
                         ? enemy.HPRegenRate - GetPotionRegenRate(buff)
                         : enemy.HPRegenRate;
 
-                    if (hasbuff)
-                        Chat.Print("regen: " + val);
+                    if (hasbuff && val < 0) //HPRegenRate not updated on potion
+                        val = enemy.HPRegenRate;
 
                     if (lastEnemyRegens.ContainsKey(enemy))
                         lastEnemyRegens[enemy] = val;
