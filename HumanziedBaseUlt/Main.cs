@@ -124,54 +124,50 @@ namespace HumanziedBaseUlt
                 float totalEnemyHp = enemy.Health + regedHealthRecallFinished;
                 float fountainReg = GetFountainReg(enemy);
 
-                var aioDmg = Damage.GetAioDmg(enemy, timeLeft);
                 AIHeroClient ally = Damage.ArePremadesNeeded(enemy, timeLeft, totalEnemyHp, fountainReg);
 
                 if (ally != null && ally == me)
                 {
                     float allyDmg = Damage.GetBaseUltSpellDamage(enemy, ally);
 
-                    if (allyDmg > totalEnemyHp)
+                    var waitRegMSeconds = ((allyDmg - totalEnemyHp) / fountainReg) * 1000;
+                    if (waitRegMSeconds < config.Get<Slider>("minDelay").CurrentValue)
+                        continue;
+
+                    Messaging.ProcessInfo(waitRegMSeconds, enemy.ChampionName);
+
+                    if (travelTime <= (timeLeft + waitRegMSeconds))
                     {
-                        var waitRegMSeconds = ((allyDmg - totalEnemyHp) / fountainReg) * 1000;
-                        if (waitRegMSeconds < config.Get<Slider>("minDelay").CurrentValue)
-                            continue;
-
-                        Messaging.ProcessInfo(waitRegMSeconds, enemy.ChampionName);
-
-                        if (travelTime <= (timeLeft + waitRegMSeconds))
-                        {
-                            Vector3 enemyBaseVec = ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
-                            int delay = (int)Math.Floor(timeLeft + waitRegMSeconds - travelTime);
-                            Core.DelayAction(() => Player.CastSpell(SpellSlot.R, enemyBaseVec), delay);
-                            Listing.teleportingEnemies.Remove(enemyInst);
-                            return;
-                        }
+                        Vector3 enemyBaseVec = ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
+                        int delay = (int)Math.Floor(timeLeft + waitRegMSeconds - travelTime);
+                        Core.DelayAction(() => Player.CastSpell(SpellSlot.R, enemyBaseVec), delay);
+                        Listing.teleportingEnemies.Remove(enemyInst);
+                        return;
                     }
                 }
 
-                if (ally == null)
+                var aioDmg = Damage.GetAioDmg(enemy, timeLeft);
+
+                if (ally == null && aioDmg > totalEnemyHp)
                 {
-                    if (aioDmg > totalEnemyHp)
+                    Chat.Print("pre");
+                    // totalEnemyHp + fountainReg * seconds = myDmg
+                    var waitRegMSeconds = ((aioDmg - totalEnemyHp)/fountainReg)*1000;
+                    if (waitRegMSeconds < config.Get<Slider>("minDelay").CurrentValue)
+                        continue;
+
+                    Messaging.ProcessInfo(waitRegMSeconds, enemy.ChampionName);
+
+                    if (travelTime <= (timeLeft + waitRegMSeconds))
                     {
-                        // totalEnemyHp + fountainReg * seconds = myDmg
-                        var waitRegMSeconds = ((aioDmg - totalEnemyHp)/fountainReg)*1000;
-                        if (waitRegMSeconds < config.Get<Slider>("minDelay").CurrentValue)
-                            continue;
-
-                        Messaging.ProcessInfo(waitRegMSeconds, enemy.ChampionName);
-
-                        if (travelTime > timeLeft + waitRegMSeconds && travelTime - (timeLeft + waitRegMSeconds) < 250)
+                        if (!Algorithm.GetCollision(me.ChampionName).Any())
                         {
-                            if (!Algorithm.GetCollision(me.ChampionName).Any())
-                            {
-                                Vector3 enemyBaseVec =
-                                    ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
-                                int delay = (int) Math.Floor(timeLeft + waitRegMSeconds - travelTime);
-                                Core.DelayAction(() => Player.CastSpell(SpellSlot.R, enemyBaseVec), delay);
-                                Listing.teleportingEnemies.Remove(enemyInst);
-                                return;
-                            }
+                            Vector3 enemyBaseVec =
+                                ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
+                            int delay = (int) Math.Floor(timeLeft + waitRegMSeconds - travelTime);
+                            Core.DelayAction(() => Player.CastSpell(SpellSlot.R, enemyBaseVec), delay);
+                            Listing.teleportingEnemies.Remove(enemyInst);
+                            return;
                         }
                     }
                 }
