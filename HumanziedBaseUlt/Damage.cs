@@ -5,12 +5,15 @@ namespace HumanziedBaseUlt
 {
     class Damage
     {
+        public static float GetAioDmg(AIHeroClient target)
+        {
+            return 0;
+        }
         public static float GetBaseUltSpellDamage(AIHeroClient target, string sourceChampionName)
         {
             var level = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.R).Level - 1;
             if (sourceChampionName == "Jinx")
-            {
-                
+            { 
                 {
                     var damage = new float[] {250, 350, 450}[level] +
                                  new float[] {25, 30, 35}[level]/100*(target.MaxHealth - target.Health) +

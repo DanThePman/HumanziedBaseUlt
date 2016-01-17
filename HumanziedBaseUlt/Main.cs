@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -15,6 +14,7 @@ namespace HumanziedBaseUlt
     {
         private readonly AIHeroClient me = ObjectManager.Player;
         private Menu config;
+        private Menu allyconfig;
 
         public Main()
         {
@@ -26,6 +26,13 @@ namespace HumanziedBaseUlt
             config.AddSeparator(20);
             config.Add("fountainReg", new Slider("Enemy regeneration speed", 87, 84, 90));
             config.Add("fountainRegMin20", new Slider("Enemy regeneration speed after minute 20", 368, 350, 390));
+
+            allyconfig = config.AddSubMenu("Premades");
+            foreach (var source in EntityManager.Heroes.Allies.Where(x => !x.IsMe && Listing.spellDataList.Any(y =>
+                x.ChampionName == y.championName)))
+            {
+                allyconfig.Add(source.ChampionName, new CheckBox(source.ChampionName));
+            }
 
             Game.OnUpdate += GameOnOnUpdate;
             Teleport.OnTeleport += TeleportOnOnTeleport;
@@ -131,8 +138,11 @@ namespace HumanziedBaseUlt
 
                     if (travelTime > timeLeft + waitRegMSeconds && travelTime - (timeLeft + waitRegMSeconds) < 250)
                     {
-                        Vector3 enemyBaseVec = ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
-                        Player.CastSpell(SpellSlot.R, enemyBaseVec);
+                        if (!Algorithm.GetCollision(me.ChampionName).Any())
+                        {
+                            Vector3 enemyBaseVec = ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
+                            Player.CastSpell(SpellSlot.R, enemyBaseVec);
+                        }
                     }
                 }
                 else

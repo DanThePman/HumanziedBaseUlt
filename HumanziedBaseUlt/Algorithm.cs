@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
+using EloBuddy.SDK;
+using SharpDX;
 
 namespace HumanziedBaseUlt
 {
@@ -29,6 +32,21 @@ namespace HumanziedBaseUlt
             }
 
             return regen;
+        }
+
+        public static IEnumerable<Obj_AI_Base> GetCollision(string sourceName)
+        {
+            var heroEntry = Listing.spellDataList.First(x => x.championName == sourceName);
+            Vector3 enemyBaseVec = ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
+
+            return (from unit in EntityManager.Heroes.Enemies.Where(h => ObjectManager.Player.Distance(h) < 2000)
+                    let pred =
+                        Prediction.Position.PredictLinearMissile(unit, 2000, (int)heroEntry.Width, (int)heroEntry.Delay,
+                            heroEntry.Speed, -1)
+                    let endpos = ObjectManager.Player.ServerPosition.Extend(enemyBaseVec, 2000)
+                    let projectOn = pred.UnitPosition.To2D().ProjectOn(ObjectManager.Player.ServerPosition.To2D(), endpos)
+                    where projectOn.SegmentPoint.Distance(endpos) < (int)heroEntry.Width + unit.BoundingRadius
+                    select unit).Cast<Obj_AI_Base>().ToList();
         }
     }
 }
