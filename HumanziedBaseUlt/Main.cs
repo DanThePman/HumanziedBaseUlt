@@ -14,6 +14,7 @@ namespace HumanziedBaseUlt
     class Main : Events
     {
         private readonly AIHeroClient me = ObjectManager.Player;
+        // ReSharper disable once FieldCanBeMadeReadOnly.Local
         private Menu config;
 
         public Main()
@@ -24,8 +25,15 @@ namespace HumanziedBaseUlt
             config.Add("minDelay", new Slider("Minimum required delay", 1000, 0, 2500));
             config.AddLabel("The time to let the enemy regenerate health in base");
             config.AddSeparator(20);
-            config.Add("fountainReg", new Slider("Enemy regeneration speed", 90, 84, 91));
-            config.Add("fountainRegMin20", new Slider("Enemy regeneration speed after minute 20", 369, 350, 390));
+            config.Add("fountainReg", new Slider("Fountain regeneration speed", 90, 84, 91));
+            config.Add("fountainRegMin20", new Slider("Fountain regeneration speed after minute 20", 369, 350, 390));
+
+            Listing.potionMenu = config.AddSubMenu("Potions", "potionsMenuasrfsdg");
+            Listing.potionMenu.AddLabel("[Regeneration Speed in HP/Sec.]");
+            Listing.potionMenu.Add("healPotionRegVal", new Slider("Heal Potion / Cookie", 13, 5, 20));
+            Listing.potionMenu.Add("crystalFlaskRegVal", new Slider("Crystal Flask", 13, 5, 20));
+            Listing.potionMenu.Add("crystalFlaskJungleRegVal", new Slider("Crystal Flask Jungle", 10, 5, 20));
+            Listing.potionMenu.Add("darkCrystalFlaskVal", new Slider("Dark Crystal Flask", 16, 5, 20));
 
             Listing.allyconfig = config.AddSubMenu("Premades");
             foreach (var ally in EntityManager.Heroes.Allies)
@@ -103,6 +111,8 @@ namespace HumanziedBaseUlt
             CheckForInvisibility();
 
             CheckRecallingEnemies();
+
+
         }
 
         private void CheckRecallingEnemies()

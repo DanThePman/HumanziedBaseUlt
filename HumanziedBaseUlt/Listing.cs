@@ -4,12 +4,14 @@ using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Menu;
+using EloBuddy.SDK.Menu.Values;
 
 namespace HumanziedBaseUlt
 {
     class Listing
     {
         public static Menu allyconfig;
+        public static Menu potionMenu;
 
         public class UltSpellDataS
         {
@@ -137,25 +139,37 @@ namespace HumanziedBaseUlt
             {
                 public static string BuffName = "RegenerationPotion";
                 public static string BuffNameCookie = "ItemMiniRegenPotion";
-                public static float RegenRate = 13f;
+                public static float RegenRate {
+                    get { return potionMenu["healPotionRegVal"].Cast<Slider>().CurrentValue; }
+                }
                 public static float Duration = 15000;
             }
             public static class RefillablePotion
             {
                 public static string BuffName = "ItemCrystalFlask";
-                public static float RegenRate = 13f;
+                public static float RegenRate
+                {
+                    get { return potionMenu["crystalFlaskRegVal"].Cast<Slider>().CurrentValue; }
+                }
                 public static float Duration = 12000;
             }
+            
             public static class HuntersPotion
             {
                 public static string BuffName = "ItemCrystalFlaskJungle";
-                public static float RegenRate = 10f;
+                public static float RegenRate
+                {
+                    get { return potionMenu["crystalFlaskJungleRegVal"].Cast<Slider>().CurrentValue; }
+                }
                 public static float Duration = 8000;
             }
             public static class CorruptingPotion
             {
                 public static string BuffName = "ItemDarkCrystalFlask";
-                public static float RegenRate = 16f;
+                public static float RegenRate
+                {
+                    get { return potionMenu["darkCrystalFlaskVal"].Cast<Slider>().CurrentValue; }
+                }
                 public static float Duration = 12000;
             }
         }
