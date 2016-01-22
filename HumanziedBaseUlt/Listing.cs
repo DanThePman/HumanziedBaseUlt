@@ -33,7 +33,6 @@ namespace HumanziedBaseUlt
         public class PortingEnemy
         {
             public AIHeroClient Sender { get; set; }
-            public float TotalRegedHealthSinceInvis { get; set; }
             public int StartTick { get; set; }
 
             public int Duration { get; set; }

@@ -20,7 +20,7 @@ namespace HumanziedBaseUlt
         {
             float dmg = 0;
 
-            foreach (var ally in EntityManager.Heroes.Allies)
+            foreach (var ally in EntityManager.Heroes.Allies.Where(x => x.IsValid))
             {
                 if (Listing.spellDataList.Any(x => x.championName == ally.ChampionName))
                 {

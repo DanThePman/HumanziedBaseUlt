@@ -51,15 +51,11 @@ namespace HumanziedBaseUlt
                         return;
                     if (Listing.teleportingEnemies.All(x => x.Sender != sender))
                     {
-                        float lastHpReg = Listing.Regeneration.lastEnemyRegens.First(x => x.Key.Equals(sender)).Value;
-                        float invisTime = (Core.GameTickCount - invisEnemiesEntry.StartTime) / 1000;
-                        float totalRegedHp = lastHpReg*invisTime;
                         Listing.teleportingEnemies.Add(new Listing.PortingEnemy
                         {
                             Sender = (AIHeroClient) sender,
                             Duration = args.Duration,
                             StartTick = args.Start,
-                            TotalRegedHealthSinceInvis = totalRegedHp
                         });
                     }
                     break;
@@ -111,7 +107,7 @@ namespace HumanziedBaseUlt
 
         private void CheckRecallingEnemies()
         {
-            foreach (var enemyInst in Listing.teleportingEnemies.OrderBy(x => x.Sender.Health + x.TotalRegedHealthSinceInvis))
+            foreach (var enemyInst in Listing.teleportingEnemies.OrderBy(x => x.Sender.Health))
             {
                 var enemy = enemyInst.Sender;
                 var invisEntry = Listing.invisEnemiesList.First(x => x.sender.Equals(enemy));
@@ -142,7 +138,6 @@ namespace HumanziedBaseUlt
                             Vector3 enemyBaseVec =
                                 ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
                             float delay = timeLeft + waitRegMSeconds - travelTime;
-                            Chat.Print(delay);
                             Core.DelayAction(() => Player.CastSpell(SpellSlot.R, enemyBaseVec), (int)delay);
                             Listing.teleportingEnemies.Remove(enemyInst);
                         }
