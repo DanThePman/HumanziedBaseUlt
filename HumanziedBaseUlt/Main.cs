@@ -21,10 +21,10 @@ namespace HumanziedBaseUlt
             config = MainMenu.AddMenu("HumanizedBaseUlts", "humanizedBaseUlts");
             config.Add("on", new CheckBox("Enabled"));
             config.Add("min20", new CheckBox("20 min passed"));
-            config.Add("minDelay", new Slider("Minimum required delay", 750, 0, 2500));
+            config.Add("minDelay", new Slider("Minimum required delay", 1000, 0, 2500));
             config.AddLabel("The time to let the enemy regenerate health in base");
             config.AddSeparator(20);
-            config.Add("fountainReg", new Slider("Enemy regeneration speed", 89, 84, 91));
+            config.Add("fountainReg", new Slider("Enemy regeneration speed", 90, 84, 91));
             config.Add("fountainRegMin20", new Slider("Enemy regeneration speed after minute 20", 369, 350, 390));
 
             Listing.allyconfig = config.AddSubMenu("Premades");
