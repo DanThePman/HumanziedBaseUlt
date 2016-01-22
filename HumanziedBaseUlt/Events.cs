@@ -1,5 +1,6 @@
 ﻿using System;
 using EloBuddy;
+using EloBuddy.SDK;
 
 namespace HumanziedBaseUlt
 {
@@ -32,6 +33,7 @@ namespace HumanziedBaseUlt
         public class Messaging
         {
             private static string lastArgs;
+            private static int lastMsg;
             /// <summary>
             /// Prints ult delay in chat
             /// </summary>
@@ -39,10 +41,12 @@ namespace HumanziedBaseUlt
             /// <param name="args">Champion name</param>
             public static void ProcessInfo(float delay, string args)
             {
-                if (lastArgs == args)
+                if (lastArgs == args || Core.GameTickCount - lastMsg <= 2000)
                     return;
+
                 Chat.Print(args + " ult delay: " + delay.ToString() + " ms");
                 lastArgs = args;
+                lastMsg = Core.GameTickCount;
             } 
         }
     }
