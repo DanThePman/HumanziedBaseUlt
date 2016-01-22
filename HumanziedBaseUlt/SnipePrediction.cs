@@ -130,8 +130,6 @@ namespace HumanziedBaseUlt
                 currentHitChanceInt = 2;
             else if (SnipeChance == HitChance.High)
                 currentHitChanceInt = 3;
-            
-            Chat.Print("Trying to snipe '" + target.ChampionName + "' with HitChance " + SnipeChance);
 
             if (CastPosition != null && currentHitChanceInt >= minHitChance)
                 CheckUltCast(args.Start + args.Duration);
@@ -156,8 +154,6 @@ namespace HumanziedBaseUlt
                 Player.CastSpell(SpellSlot.R, CastPosition);
                 Teleport.OnTeleport -= SnipePredictionOnTeleport;
             }
-            else 
-                Chat.Print(intime + "//" + enoughDmg);
         }
     }
 }
