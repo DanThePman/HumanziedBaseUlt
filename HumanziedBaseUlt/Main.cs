@@ -31,7 +31,7 @@ namespace HumanziedBaseUlt
             foreach (var ally in EntityManager.Heroes.Allies)
             {
                 if (Listing.spellDataList.Any(x => x.championName == ally.ChampionName))
-                    Listing.allyconfig.Add(ally.ChampionName + "/Premade", new CheckBox(ally.ChampionName, false));
+                    Listing.allyconfig.Add(ally.ChampionName + "/Premade", new CheckBox(ally.ChampionName, ally.IsMe));
             }
 
             Game.OnUpdate += GameOnOnUpdate;
@@ -107,7 +107,7 @@ namespace HumanziedBaseUlt
 
         private void CheckRecallingEnemies()
         {
-            foreach (var enemyInst in Listing.teleportingEnemies.OrderBy(x => x.Sender.Health))
+            foreach (Listing.PortingEnemy enemyInst in Listing.teleportingEnemies.OrderBy(x => x.Sender.Health))
             {
                 var enemy = enemyInst.Sender;
                 var invisEntry = Listing.invisEnemiesList.First(x => x.sender.Equals(enemy));
@@ -131,15 +131,28 @@ namespace HumanziedBaseUlt
 
                     Messaging.ProcessInfo(waitRegMSeconds, enemy.ChampionName);
 
-                    if (travelTime <= (timeLeft + waitRegMSeconds))
+                    if (travelTime <= timeLeft)
                     {
                         if (!Algorithm.GetCollision(me.ChampionName).Any())
                         {
                             Vector3 enemyBaseVec =
                                 ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
                             float delay = timeLeft + waitRegMSeconds - travelTime;
-                            Core.DelayAction(() => Player.CastSpell(SpellSlot.R, enemyBaseVec), (int)delay);
-                            Listing.teleportingEnemies.Remove(enemyInst);
+
+                            Core.DelayAction(() => 
+                            {
+                                Player.CastSpell(SpellSlot.R, enemyBaseVec);
+
+                                #region draven
+                                    float travelTime2 = Algorithm.GetUltTravelTime(me);
+                                    if (me.ChampionName == "Draven")
+                                        Core.DelayAction(() =>
+                                        {
+                                            Player.CastSpell(SpellSlot.R);
+                                        }, (int)(travelTime2 - 400));
+                                #endregion draven
+                            }, 
+                            (int)delay);
                         }
                     }
                 }

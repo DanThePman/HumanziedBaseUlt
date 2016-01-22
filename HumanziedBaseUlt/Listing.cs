@@ -49,7 +49,6 @@ namespace HumanziedBaseUlt
 
             public static void CheckEnemyBaseRegenartions()
             {
-                
                 foreach (var enemy in EntityManager.Heroes.Enemies)
                 {
                     bool hasbuff = HasPotionActive(enemy);
