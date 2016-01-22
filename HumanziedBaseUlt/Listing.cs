@@ -5,6 +5,7 @@ using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Menu;
 using EloBuddy.SDK.Menu.Values;
+using SharpDX;
 
 namespace HumanziedBaseUlt
 {
@@ -12,6 +13,7 @@ namespace HumanziedBaseUlt
     {
         public static Menu allyconfig;
         public static Menu potionMenu;
+        public static Menu snipeMenu;
 
         public class UltSpellDataS
         {
@@ -49,7 +51,7 @@ namespace HumanziedBaseUlt
             public static readonly Dictionary<AIHeroClient, float> lastEnemyRegens = new Dictionary<AIHeroClient, float>(5);
             public static readonly Dictionary<AIHeroClient, BuffInstance> enemyBuffs = new Dictionary<AIHeroClient, BuffInstance>(5);           
 
-            public static void CheckEnemyBaseRegenartions()
+            public static void UpdateEnemyNormalRegenartions()
             {
                 foreach (var enemy in EntityManager.Heroes.Enemies)
                 {
@@ -126,14 +128,14 @@ namespace HumanziedBaseUlt
                     return RegenerationSpellBook.HuntersPotion.RegenRate;
                 }
 
-                return Single.NaN;
+                return float.NaN;
             }
         }
 
         /// <summary>
         /// Regens per second
         /// </summary>
-        public class RegenerationSpellBook
+        private class RegenerationSpellBook
         {
             public static class HealthPotion
             {
@@ -171,6 +173,28 @@ namespace HumanziedBaseUlt
                     get { return potionMenu["darkCrystalFlaskVal"].Cast<Slider>().CurrentValue; }
                 }
                 public static float Duration = 12000;
+            }
+        }
+
+        public class Pathing
+        {
+            public static readonly Dictionary<AIHeroClient, Vector3[]> enemiesPaths = new Dictionary<AIHeroClient, Vector3[]>(5);
+            public static List<SnipePrediction> enemySnipeProcs = new List<SnipePrediction>(5);
+
+            public static void UpdateEnemyPaths()
+            {
+                foreach (AIHeroClient enemy in EntityManager.Heroes.Enemies.Where(x => x.IsHPBarRendered))
+                {
+                    if (enemiesPaths.ContainsKey(enemy))
+                        enemiesPaths[enemy] = enemy.RealPath();
+                    else
+                        enemiesPaths.Add(enemy, enemy.RealPath());
+                }
+            }
+
+            public static Vector3[] GetLastEnemyPath(AIHeroClient enemy)
+            {
+                return enemiesPaths.FirstOrDefault(x => x.Key.Equals(enemy)).Value;
             }
         }
     }

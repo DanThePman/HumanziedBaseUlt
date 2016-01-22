@@ -1,6 +1,7 @@
 ﻿using System;
 using EloBuddy;
 using EloBuddy.SDK;
+using SharpDX;
 
 namespace HumanziedBaseUlt
 {
@@ -14,6 +15,8 @@ namespace HumanziedBaseUlt
             /// per second without potions
             /// </summary>
             public float StdHealthRegen { get; set; }
+
+            public Vector3[] LastRealPath { get; set; }
         }
 
         public delegate void OnEnemyInvisibleH(InvisibleEventArgs args);

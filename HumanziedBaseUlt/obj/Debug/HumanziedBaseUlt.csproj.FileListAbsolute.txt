@@ -6,6 +6,5 @@ c:\users\daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\Humanzied
 c:\users\daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\bin\Debug\SharpDX.dll
 c:\users\daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\bin\Debug\SharpDX.Direct3D9.dll
 c:\users\daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\bin\Debug\Newtonsoft.Json.dll
-c:\users\daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\obj\Debug\HumanziedBaseUlt.csprojResolveAssemblyReference.cache
 c:\users\daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\obj\Debug\HumanziedBaseUlt.exe
 c:\users\daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\obj\Debug\HumanziedBaseUlt.pdb

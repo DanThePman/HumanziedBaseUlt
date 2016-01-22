@@ -9,11 +9,11 @@ namespace HumanziedBaseUlt
 {
     class Algorithm
     {
-        public static float GetUltTravelTime(AIHeroClient source)
+        public static float GetUltTravelTime(AIHeroClient source, Vector3? dest = null)
         {
             try
             {
-                var targetpos = ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy);
+                var targetpos = dest.HasValue ? dest.Value : ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
                 float speed = Listing.spellDataList.First(x => x.championName == source.ChampionName).Speed;
                 float delay = Listing.spellDataList.First(x => x.championName == source.ChampionName).Delay;
 

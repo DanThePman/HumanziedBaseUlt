@@ -40,6 +40,11 @@ namespace HumanziedBaseUlt
             Listing.potionMenu.Add("crystalFlaskJungleRegVal", new Slider("Crystal Flask Jungle", 10, 5, 20));
             Listing.potionMenu.Add("darkCrystalFlaskVal", new Slider("Dark Crystal Flask", 16, 5, 20));
 
+            Listing.snipeMenu = config.AddSubMenu("Enemy Recall Snipe", "snipeultimatesae3re");
+            Listing.snipeMenu.AddLabel("[No premade feature currently]");
+            Listing.snipeMenu.Add("snipeEnabled", new CheckBox("Enabled"));
+            Listing.snipeMenu.Add("minSnipeHitChance", new Slider("Minimum Snipe HitChance", 3, 0, 3));
+
             Listing.allyconfig = config.AddSubMenu("Premades");
             foreach (var ally in EntityManager.Heroes.Allies)
             {
@@ -92,6 +97,10 @@ namespace HumanziedBaseUlt
             Listing.visibleEnemies.Add(sender);
             var invisEntry = Listing.invisEnemiesList.First(x => x.sender.Equals(sender));
             Listing.invisEnemiesList.Remove(invisEntry);
+
+            var sinpeEntry = Listing.Pathing.enemySnipeProcs.FirstOrDefault(x => x.target == sender);
+            sinpeEntry.CancelProcess();
+            Listing.Pathing.enemySnipeProcs.Remove(sinpeEntry);
         }
         
         /*enemy disappear*/
@@ -102,27 +111,29 @@ namespace HumanziedBaseUlt
 
             Listing.visibleEnemies.Remove(args.sender);
             Listing.invisEnemiesList.Add(args);
+
+            if (Listing.snipeMenu["snipeEnabled"].Cast<CheckBox>().CurrentValue)
+                Listing.Pathing.enemySnipeProcs.Add(new SnipePrediction(args));
         }
 
         private void GameOnOnUpdate(EventArgs args)
         {
-            if (!config.Get<CheckBox>("on").CurrentValue)
-                return;
-
             config.Get<CheckBox>("min20").CurrentValue = Game.Time > 1225f;
 
-            Listing.Regeneration.CheckEnemyBaseRegenartions();
 
-            CheckForInvisibility();
-
+            Listing.Regeneration.UpdateEnemyNormalRegenartions();
+            UpdateEnemyVisibility();
+            Listing.Pathing.UpdateEnemyPaths();
             CheckRecallingEnemies();
-
-
         }
 
         private void CheckRecallingEnemies()
         {
-            foreach (Listing.PortingEnemy enemyInst in Listing.teleportingEnemies.OrderBy(x => x.Sender.Health))
+            if (!config.Get<CheckBox>("on").CurrentValue)
+                return;
+
+            foreach (Listing.PortingEnemy enemyInst in Listing.teleportingEnemies.OrderBy(
+                x => x.Sender.Health - Damage.GetBaseUltSpellDamage(x.Sender, me)))
             {
                 var enemy = enemyInst.Sender;
                 var invisEntry = Listing.invisEnemiesList.First(x => x.sender.Equals(enemy));
@@ -195,7 +206,7 @@ namespace HumanziedBaseUlt
             return fountainReg;
         }
 
-        private void CheckForInvisibility()
+        private void UpdateEnemyVisibility()
         {
             foreach (var enemy in EntityManager.Heroes.Enemies)
             {
@@ -209,7 +220,8 @@ namespace HumanziedBaseUlt
                     {
                         StartTime = Core.GameTickCount,
                         sender = enemy,
-                        StdHealthRegen = Listing.Regeneration.lastEnemyRegens[enemy]
+                        StdHealthRegen = Listing.Regeneration.lastEnemyRegens[enemy],
+                        LastRealPath = Listing.Pathing.GetLastEnemyPath(enemy)
                     });
                 }
             }
