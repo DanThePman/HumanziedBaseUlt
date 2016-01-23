@@ -23,6 +23,18 @@ namespace HumanziedBaseUlt
 
         private int lastAbortTick;
 
+        private static float PathLengthTo(Vector3[] path, Vector3 to)
+        {
+            var distance = 0f;
+            for (var i = 0; i < path.Length - 1; i++)
+            {
+                distance += path[i].Distance(path[i + 1]);
+
+                if (path[i + 1] == to)
+                    break;
+            }
+            return distance;
+        }
         private IEnumerable<Obj_AI_Base> DoesCollide()
         {
             if (ObjectManager.Player.ChampionName == "Ezreal")
@@ -110,7 +122,7 @@ namespace HumanziedBaseUlt
                 }
 
                 float realDist = moveSpeed * timeElapsed / 1000;
-                CastPosition = lastRealPath.OrderBy(x => Math.Abs(x.Distance(lastRealPath.First()) - realDist)).First();
+                CastPosition = lastRealPath.OrderBy(x => Math.Abs(PathLengthTo(lastRealPath, x) - realDist)).First();
             }
 
             if (args.Status == TeleportStatus.Abort)

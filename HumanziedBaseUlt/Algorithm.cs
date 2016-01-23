@@ -49,13 +49,13 @@ namespace HumanziedBaseUlt
         {    
             float regen = 0;
 
-            int start = StartTime/1000;
-            int end = EndTime / 1000;
+            int start = (int)Math.Floor((double)(StartTime/1000));
+            int end = (int)Math.Ceiling((double)(EndTime / 1000));
 
             bool hasbuff = Listing.Regeneration.enemyBuffs.Any(x => x.Key.Equals(enemy));
             BuffInstance regenBuff = hasbuff ?
                 Listing.Regeneration.enemyBuffs.First(x => x.Key.Equals(enemy)).Value : null;
-            float buffEndTime = hasbuff ? regenBuff.EndTime/1000 : 0;
+            int buffEndTime = hasbuff ? (int)Math.Ceiling(regenBuff.EndTime / 1000) : 0;
 
             for (int i = start; i <= end; ++i)
             {

@@ -43,7 +43,8 @@ namespace HumanziedBaseUlt
             Listing.snipeMenu = config.AddSubMenu("Enemy Recall Snipe", "snipeultimatesae3re");
             Listing.snipeMenu.AddLabel("[No premade feature currently]");
             Listing.snipeMenu.Add("snipeEnabled", new CheckBox("Enabled"));
-            Listing.snipeMenu.Add("minSnipeHitChance", new Slider("Minimum Snipe HitChance", 3, 0, 3));
+            AddStringList(Listing.snipeMenu, "minSnipeHitChance", "Minimum Snipe HitChance", 
+                new []{ "Impossible", "Low", "Above Average", "Very High"}, 2);
 
             Listing.allyconfig = config.AddSubMenu("Premades");
             foreach (var ally in EntityManager.Heroes.Allies)
@@ -56,6 +57,16 @@ namespace HumanziedBaseUlt
             Teleport.OnTeleport += TeleportOnOnTeleport;
             OnEnemyInvisible += OnOnEnemyInvisible;
             OnEnemyVisible += OnOnEnemyVisible;
+        }
+
+        private void AddStringList(Menu m, string uniqueId, string displayName, string[] values, int defaultValue)
+        {
+            var mode = m.Add(uniqueId, new Slider(displayName, defaultValue, 0, values.Length - 1));
+            mode.DisplayName = displayName + ": " + values[mode.CurrentValue];
+            mode.OnValueChange += delegate (ValueBase<int> sender, ValueBase<int>.ValueChangeArgs args)
+            {
+                sender.DisplayName = displayName + ": " + values[args.NewValue];
+            };
         }
 
         private void TeleportOnOnTeleport(Obj_AI_Base sender, Teleport.TeleportEventArgs args)
