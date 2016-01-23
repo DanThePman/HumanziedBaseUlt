@@ -49,25 +49,25 @@ namespace HumanziedBaseUlt
         {    
             float regen = 0;
 
-            int start = (int)Math.Floor((double)(StartTime/1000));
-            int end = (int)Math.Ceiling((double)(EndTime / 1000));
+            int start = StartTime;
+            int end = EndTime;
 
             bool hasbuff = Listing.Regeneration.enemyBuffs.Any(x => x.Key.Equals(enemy));
             BuffInstance regenBuff = hasbuff ?
                 Listing.Regeneration.enemyBuffs.First(x => x.Key.Equals(enemy)).Value : null;
-            int buffEndTime = hasbuff ? (int)Math.Ceiling(regenBuff.EndTime / 1000) : 0;
+            float buffEndTime = hasbuff ? regenBuff.EndTime : 0;
 
             for (int i = start; i <= end; ++i)
             {
                 regen += 
                     i >= buffEndTime || !hasbuff
                     ? 
-                    Listing.invisEnemiesList.First(x => x.sender.Equals(enemy)).StdHealthRegen
+                    Listing.invisEnemiesList.First(x => x.sender.Equals(enemy)).StdHealthRegen / 1000
                     : 
-                    Listing.Regeneration.GetPotionRegenRate(regenBuff);
+                    Listing.Regeneration.GetPotionRegenRate(regenBuff) / 1000;
             }
 
-            return regen;
+            return (float) Math.Ceiling(regen);
         }
 
         public static IEnumerable<Obj_AI_Base> GetCollision(string sourceName)

@@ -44,10 +44,11 @@ namespace HumanziedBaseUlt
             /// <param name="args">Champion name</param>
             public static void ProcessInfo(float delay, string args)
             {
-                if (lastArgs == args || Core.GameTickCount - lastMsg <= 2000)
+                if (Core.GameTickCount - lastMsg <= 2000)
                     return;
+               
 
-                Chat.Print(args + " ult delay: " + delay.ToString() + " ms");
+                Chat.Print("<font color=\"#0cf006\">" + args + " ult delay: " + delay + " ms</font>");
                 lastArgs = args;
                 lastMsg = Core.GameTickCount;
             } 

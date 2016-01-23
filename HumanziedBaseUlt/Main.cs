@@ -25,8 +25,8 @@ namespace HumanziedBaseUlt
             config.AddLabel("The time to let the enemy regenerate health in base");
 
             config.AddSeparator(20);
-            config.Add("fountainReg", new Slider("Fountain regeneration speed", 90, 87, 95));
-            config.Add("fountainRegMin20", new Slider("Fountain regeneration speed after minute 20", 369, 350, 390));
+            config.Add("fountainReg", new Slider("Fountain regeneration speed", 88, 85, 92));
+            config.Add("fountainRegMin20", new Slider("Fountain regeneration speed after minute 20", 366, 350, 370));
 
             config.AddSeparator();
             config.AddLabel("[Draven]");
@@ -35,9 +35,9 @@ namespace HumanziedBaseUlt
 
             Listing.potionMenu = config.AddSubMenu("Potions", "potionsMenuasrfsdg");
             Listing.potionMenu.AddLabel("[Regeneration Speed in HP/Sec.]");
-            Listing.potionMenu.Add("healPotionRegVal", new Slider("Heal Potion / Cookie", 13, 5, 20));
-            Listing.potionMenu.Add("crystalFlaskRegVal", new Slider("Crystal Flask", 13, 5, 20));
-            Listing.potionMenu.Add("crystalFlaskJungleRegVal", new Slider("Crystal Flask Jungle", 10, 5, 20));
+            Listing.potionMenu.Add("healPotionRegVal", new Slider("Heal Potion / Cookie", 10, 5, 20));
+            Listing.potionMenu.Add("crystalFlaskRegVal", new Slider("Crystal Flask", 10, 5, 20));
+            Listing.potionMenu.Add("crystalFlaskJungleRegVal", new Slider("Crystal Flask Jungle", 9, 5, 20));
             Listing.potionMenu.Add("darkCrystalFlaskVal", new Slider("Dark Crystal Flask", 16, 5, 20));
 
             Listing.snipeMenu = config.AddSubMenu("Enemy Recall Snipe", "snipeultimatesae3re");
@@ -147,7 +147,7 @@ namespace HumanziedBaseUlt
                 x => x.Sender.Health - Damage.GetBaseUltSpellDamage(x.Sender, me)))
             {
                 var enemy = enemyInst.Sender;
-                var invisEntry = Listing.invisEnemiesList.First(x => x.sender.Equals(enemy));
+                InvisibleEventArgs invisEntry = Listing.invisEnemiesList.First(x => x.sender.Equals(enemy));
 
                 int recallEndTime = enemyInst.StartTick + enemyInst.Duration;
                 float timeLeft = recallEndTime - Core.GameTickCount;
@@ -157,14 +157,21 @@ namespace HumanziedBaseUlt
                 float totalEnemyHp = enemy.Health + regedHealthRecallFinished;
                 float fountainReg = GetFountainReg(enemy);
 
-                var aioDmg = Damage.GetAioDmg(enemy, timeLeft);
+                float aioDmg = Damage.GetAioDmg(enemy, timeLeft);
 
                 if (aioDmg > totalEnemyHp)
                 {
                     // totalEnemyHp + fountainReg * seconds = myDmg
-                    var waitRegMSeconds = ((aioDmg - totalEnemyHp)/fountainReg)*1000;
+                    int regTimeNormal = (int)Math.Ceiling(((aioDmg - totalEnemyHp)/fountainReg)*1000);
+                    float normalRegAfterRecallFinished = Algorithm.SimulateHealthRegen(enemy, recallEndTime, recallEndTime + regTimeNormal);
+
+                    // totalEnemyHp + fountainReg * seconds + normalRegAfterRecallFinished * seconds = myDmg
+                    var waitRegMSeconds = ((aioDmg - totalEnemyHp)/(fountainReg + normalRegAfterRecallFinished))*1000;
                     if (waitRegMSeconds < config.Get<Slider>("minDelay").CurrentValue)
+                    {
+                        Chat.Print("<font color=\"#0cf006\">Delay too low: " + waitRegMSeconds + "ms</font>");
                         continue;
+                    }
 
                     Messaging.ProcessInfo(waitRegMSeconds, enemy.ChampionName);
 
@@ -193,7 +200,7 @@ namespace HumanziedBaseUlt
                                 }
                                 /*Draven*/
                             }, 
-                            (int)delay);
+                            (int)Math.Floor(delay));
                         }
                     }
                 }
