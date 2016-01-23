@@ -25,7 +25,7 @@ namespace HumanziedBaseUlt
             config.AddLabel("The time to let the enemy regenerate health in base");
 
             config.AddSeparator(20);
-            config.Add("fountainReg", new Slider("Fountain regeneration speed", 88, 85, 92));
+            config.Add("fountainReg", new Slider("Fountain regeneration speed", 89, 85, 92));
             config.Add("fountainRegMin20", new Slider("Fountain regeneration speed after minute 20", 366, 350, 370));
 
             config.AddSeparator();
@@ -161,19 +161,16 @@ namespace HumanziedBaseUlt
 
                 if (aioDmg > totalEnemyHp)
                 {
-                    // totalEnemyHp + fountainReg * seconds = myDmg
-                    int regTimeNormal = (int)Math.Ceiling(((aioDmg - totalEnemyHp)/fountainReg)*1000);
-                    float normalRegAfterRecallFinished = Algorithm.SimulateHealthRegen(enemy, recallEndTime, recallEndTime + regTimeNormal);
+                    /*contains own enemy hp reg during fly delay*/
+                    float realDelayTime = Algorithm.SimulateRealDelayTime(enemy, recallEndTime, aioDmg, fountainReg);
 
-                    // totalEnemyHp + fountainReg * seconds + normalRegAfterRecallFinished * seconds = myDmg
-                    var waitRegMSeconds = ((aioDmg - totalEnemyHp)/(fountainReg + normalRegAfterRecallFinished))*1000;
-                    if (waitRegMSeconds < config.Get<Slider>("minDelay").CurrentValue)
+                    if (realDelayTime < config.Get<Slider>("minDelay").CurrentValue)
                     {
-                        Chat.Print("<font color=\"#0cf006\">Delay too low: " + waitRegMSeconds + "ms</font>");
+                        Chat.Print("<font color=\"#0cf006\">Delay too low: " + realDelayTime + "ms</font>");
                         continue;
                     }
 
-                    Messaging.ProcessInfo(waitRegMSeconds, enemy.ChampionName);
+                    Messaging.ProcessInfo(realDelayTime, enemy.ChampionName);
 
                     if (travelTime <= timeLeft)
                     {
@@ -181,7 +178,7 @@ namespace HumanziedBaseUlt
                         {
                             Vector3 enemyBaseVec =
                                 ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
-                            float delay = timeLeft + waitRegMSeconds - travelTime;
+                            float delay = timeLeft + realDelayTime - travelTime;
 
                             Core.DelayAction(() => 
                             {

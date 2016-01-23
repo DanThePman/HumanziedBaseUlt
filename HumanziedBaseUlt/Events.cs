@@ -35,7 +35,6 @@ namespace HumanziedBaseUlt
 
         public class Messaging
         {
-            private static string lastArgs;
             private static int lastMsg;
             /// <summary>
             /// Prints ult delay in chat
@@ -49,7 +48,6 @@ namespace HumanziedBaseUlt
                
 
                 Chat.Print("<font color=\"#0cf006\">" + args + " ult delay: " + delay + " ms</font>");
-                lastArgs = args;
                 lastMsg = Core.GameTickCount;
             } 
         }
