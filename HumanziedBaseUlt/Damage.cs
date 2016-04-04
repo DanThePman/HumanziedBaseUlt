@@ -1,22 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Menu.Values;
+using SharpDX;
 
 namespace HumanziedBaseUlt
 {
-    class Damage
+    static class Damage
     {
         /// <summary>
         /// list of premades, dmg
         /// </summary>
         /// <param name="target"></param>
         /// <param name="timeLeft"></param>
-        /// <param name="totalEnemyHp"></param>
+        /// <param name="dest">Where the destination point is to check collision</param>
         /// <returns></returns>
-        public static float GetAioDmg(AIHeroClient target, float timeLeft)
+        public static float GetAioDmg(AIHeroClient target, float timeLeft, Vector3? dest = null)
         {
             float dmg = 0;
 
@@ -27,11 +27,11 @@ namespace HumanziedBaseUlt
                     string menuid = ally.ChampionName + "/Premade";
                     if (Listing.allyconfig.Get<CheckBox>(menuid).CurrentValue)
                     {
-                        float travelTime = Algorithm.GetUltTravelTime(ally);
+                        float travelTime = Algorithm.GetUltTravelTime(ally, dest);
                         bool canr = ally.Spellbook.GetSpell(SpellSlot.R).IsReady && ally.Mana >= 100;
                         bool intime = travelTime <= timeLeft;
 
-                        if (canr && intime && !Algorithm.GetCollision(ally.ChampionName).Any())
+                        if (canr && intime && !Algorithm.GetCollision(ally.ChampionName, dest).Any())
                         {
                             dmg += GetBaseUltSpellDamage(target, ally);
                         }
@@ -84,12 +84,13 @@ namespace HumanziedBaseUlt
         public static float GetBaseUltSpellDamage(AIHeroClient target, AIHeroClient source)
         {
             var level = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.R).Level - 1;
+
             if (source.ChampionName == "Jinx")
             { 
                 {
                     var damage = new float[] {250, 350, 450}[level] +
                                  new float[] {25, 30, 35}[level]/100*(target.MaxHealth - target.Health) +
-                                 1*ObjectManager.Player.FlatPhysicalDamageMod;
+                                 ObjectManager.Player.FlatPhysicalDamageMod;
                     return source.CalculateDamageOnUnit(target, DamageType.Physical, damage);
                 }
             }

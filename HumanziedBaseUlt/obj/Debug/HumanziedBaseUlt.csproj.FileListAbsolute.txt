@@ -8,4 +8,12 @@ c:\users\daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\Humanzied
 c:\users\daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\bin\Debug\Newtonsoft.Json.dll
 c:\users\daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\obj\Debug\HumanziedBaseUlt.exe
 c:\users\daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\obj\Debug\HumanziedBaseUlt.pdb
-C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\obj\Debug\HumanziedBaseUlt.csprojResolveAssemblyReference.cache
+C:\Users\Daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\bin\Release\HumanziedBaseUlt.exe.config
+C:\Users\Daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\bin\Release\HumanziedBaseUlt.exe
+C:\Users\Daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\bin\Release\HumanziedBaseUlt.pdb
+C:\Users\Daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\bin\Release\EloBuddy.dll
+C:\Users\Daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\bin\Release\EloBuddy.SDK.dll
+C:\Users\Daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\bin\Release\SharpDX.dll
+C:\Users\Daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\bin\Release\SharpDX.Direct3D9.dll
+C:\Users\Daniel\documents\visual studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\bin\Release\Newtonsoft.Json.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HumanziedBaseUlt\HumanziedBaseUlt\bin\Release\EloBuddy.Sandbox.dll

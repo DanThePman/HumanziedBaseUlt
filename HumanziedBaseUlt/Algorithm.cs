@@ -3,76 +3,103 @@ using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
+using EloBuddy.SDK.Menu.Values;
 using SharpDX;
 
 namespace HumanziedBaseUlt
 {
-    class Algorithm
+    static class Algorithm
     {
+        static float recusrviveDelayDeviation = 50;
+        private static float lastEnemyReg = 0;
+
         public static float SimulateHealthRegen(AIHeroClient enemy, int StartTime, int EndTime)
         {    
             float regen = 0;
 
-            int start = StartTime;
-            int end = EndTime;
+            int start = (int)Math.Round((double)(StartTime / 1000));
+            int end = (int)Math.Round((double)(EndTime / 1000));
 
-            bool hasbuff = Listing.Regeneration.enemyBuffs.Any(x => x.Key.Equals(enemy));
-            BuffInstance regenBuff = hasbuff ?
-                Listing.Regeneration.enemyBuffs.First(x => x.Key.Equals(enemy)).Value : null;
+            bool hasbuff = Listing.Regeneration.HasPotionActive(enemy);
+            BuffInstance regenBuff = hasbuff ? Listing.Regeneration.GetPotionBuff(enemy) : null;
             float buffEndTime = hasbuff ? regenBuff.EndTime : 0;
+
+            //if (hasbuff)
+                //Chat.Print("startTime " + start + "//buffendTime: " + buffEndTime + "//GeneralEndTime: " + end);
 
             for (int i = start; i <= end; ++i)
             {
                 regen += 
                     i >= buffEndTime || !hasbuff
                     ? 
-                    Listing.invisEnemiesList.First(x => x.sender.Equals(enemy)).StdHealthRegen / 1000
+                    Listing.Regeneration.GetNormalRegenRate(enemy)
                     : 
-                    Listing.Regeneration.GetPotionRegenRate(regenBuff) / 1000;
+                    Listing.Regeneration.GetPotionRegenRate(regenBuff);
             }
 
-            return (float) Math.Ceiling(regen);
+            return regen;
         }
 
         /// <summary>
-        /// Adds regnerated std hp during delay time in fountain
+        /// per second
         /// </summary>
         /// <param name="enemy"></param>
-        /// <param name="recallEnd"></param>
-        /// <param name="aioDmg"></param>
-        /// <param name="fountainReg"></param>
         /// <returns></returns>
-        public static float SimulateRealDelayTime(AIHeroClient enemy, int recallEnd, float aioDmg, 
-            float fountainReg)
+        private static float GetFountainReg(AIHeroClient enemy)
         {
+            float regSpeedDefault = Listing.config.Get<Slider>("fountainReg").CurrentValue / 10;
+            float regSpeedMin20 = Listing.config.Get<Slider>("fountainRegMin20").CurrentValue / 10;
+
+            float normalHpReged = enemy.MaxHealth/100*regSpeedDefault + enemy.MaxHealth / 100*2.8f;
+            float min20HpReged = enemy.MaxHealth/100* regSpeedMin20;
+
+            float fountainReg = Listing.config.Get<CheckBox>("min20").CurrentValue ? min20HpReged :
+                normalHpReged;
+
+            return fountainReg;
+        }
+
+        public static float SimulateRealDelayTime(AIHeroClient enemy, int recallEndTick, float aioDmg)
+        {
+            float fountainReg = GetFountainReg(enemy);
             Events.InvisibleEventArgs invisEntry = Listing.invisEnemiesList.First(x => x.sender.Equals(enemy));
 
-            float regedRecallEnd = SimulateHealthRegen(enemy, invisEntry.StartTime, recallEnd);
+            float regedRecallEnd = SimulateHealthRegen(enemy, invisEntry.StartTime, recallEndTick);
             float hpRecallEnd = enemy.Health + regedRecallEnd;
 
             // totalEnemyHp + fountainReg * seconds = myDmg
             float normalDelay = ((aioDmg - hpRecallEnd) / fountainReg) * 1000;
 
-            float arriveTime0 = recallEnd + normalDelay;
 
-            int start = recallEnd;
-            int end = (int)Math.Ceiling(arriveTime0);
+            //Theory: ENEMY REGS NORMAL HP DURING DELAY TIME TO SHOOT IN FOUNTAIN => FALSE
 
-            float additionalStdRegDuringDelay = SimulateHealthRegen(enemy, start, end);
+            /*float arriveTime0 = recallEndTick + normalDelay;
+
+            int start = recallEndTick;
+            int end = (int)arriveTime0;
+
+            float additional_STD_RegDuringDelay = SimulateHealthRegen(enemy, start, end);
 
             // totalEnemyHp + fountainReg * seconds + normalRegAfterRecallFinished * seconds = myDmg <=> time
-            float realDelayTime = ((aioDmg - hpRecallEnd) / (fountainReg + additionalStdRegDuringDelay)) * 1000;
+            float realDelayTime = ((aioDmg - hpRecallEnd) / (fountainReg + additional_STD_RegDuringDelay)) * 1000;*/
 
-            return realDelayTime;
+            lastEnemyReg = regedRecallEnd + fountainReg * (normalDelay / 1000);
+
+            return normalDelay;
         }
 
-        public static IEnumerable<Obj_AI_Base> GetCollision(string sourceName)
+        public static float GetLastEstimatedEnemyReg()
+        {
+            return lastEnemyReg;
+        }
+
+        public static IEnumerable<Obj_AI_Base> GetCollision(string sourceName, Vector3? dest = null)
         {
             if (sourceName == "Ezreal")
                 return new List<Obj_AI_Base>();
 
             var heroEntry = Listing.spellDataList.First(x => x.championName == sourceName);
-            Vector3 enemyBaseVec = ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
+            Vector3 enemyBaseVec = dest ?? ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
 
             return (from unit in EntityManager.Heroes.Enemies.Where(h => ObjectManager.Player.Distance(h) < 2000)
                     let pred =

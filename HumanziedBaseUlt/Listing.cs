@@ -9,11 +9,12 @@ using SharpDX;
 
 namespace HumanziedBaseUlt
 {
-    class Listing
+    static class Listing
     {
         public static Menu allyconfig;
         public static Menu potionMenu;
         public static Menu snipeMenu;
+        public static Menu config;
 
         public class UltSpellDataS
         {
@@ -27,7 +28,7 @@ namespace HumanziedBaseUlt
         }
         public static readonly List<UltSpellDataS> spellDataList = new List<UltSpellDataS>
         {
-            new UltSpellDataS { championName = "Jinx", SpellStage = 1, DamageMultiplicator = 1.0f, Width = 140f, Delay = 0600f/1000f, Speed = 1700f, Collision = true},
+            new UltSpellDataS { championName = "Jinx", SpellStage = 1, DamageMultiplicator = 0.9f, Width = 140f, Delay = 0600f/1000f, Speed = 1700f, Collision = true},
             new UltSpellDataS { championName = "Ashe", SpellStage = 0, DamageMultiplicator = 1.0f, Width = 130f, Delay = 0250f/1000f, Speed = 1600f, Collision = true},
             new UltSpellDataS { championName = "Draven", SpellStage = 0, DamageMultiplicator = 0.7f, Width = 160f, Delay = 0400f/1000f, Speed = 2000f, Collision = true},
             new UltSpellDataS { championName = "Ezreal", SpellStage = 0, DamageMultiplicator = 0.7f, Width = 160f, Delay = 1000f/1000f, Speed = 2000f, Collision = false},
@@ -48,35 +49,21 @@ namespace HumanziedBaseUlt
 
         public class Regeneration
         {
-            public static readonly Dictionary<AIHeroClient, float> lastEnemyRegens = new Dictionary<AIHeroClient, float>(5);
-            public static readonly Dictionary<AIHeroClient, BuffInstance> enemyBuffs = new Dictionary<AIHeroClient, BuffInstance>(5);           
-
-            public static void UpdateEnemyNormalRegenartions()
+            public static float GetNormalRegenRate(AIHeroClient enemy)
             {
-                foreach (var enemy in EntityManager.Heroes.Enemies)
-                {
-                    bool hasbuff = HasPotionActive(enemy);
-                    BuffInstance buff = hasbuff ? GetPotionBuff(enemy) : null;
+                bool hasbuff = HasPotionActive(enemy);
+                BuffInstance buff = hasbuff ? GetPotionBuff(enemy) : null;
 
-                    float val = hasbuff
-                        ? enemy.HPRegenRate - GetPotionRegenRate(buff)
-                        : enemy.HPRegenRate;
+                float val = hasbuff
+                    ? enemy.HPRegenRate - GetPotionRegenRate(buff)
+                    : enemy.HPRegenRate;
 
-                    if (hasbuff && val < 0) //HPRegenRate not updated on potion
-                        val = enemy.HPRegenRate;
+                if (hasbuff && val < 0) //HPRegenRate not updated on potion
+                    val = enemy.HPRegenRate;
 
-                    if (lastEnemyRegens.ContainsKey(enemy))
-                        lastEnemyRegens[enemy] = val;
-                    else
-                        lastEnemyRegens.Add(enemy, val);
-                }
+                return val;
             }
 
-            /// <summary>
-            /// Returns Duration
-            /// </summary>
-            /// <param name="hero"></param>
-            /// <returns></returns>
             public static bool HasPotionActive(AIHeroClient hero)
             {
                 string[] potionStrings = {

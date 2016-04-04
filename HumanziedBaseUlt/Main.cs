@@ -13,40 +13,39 @@ namespace HumanziedBaseUlt
     class Main : Events
     {
         private readonly AIHeroClient me = ObjectManager.Player;
-        // ReSharper disable once FieldCanBeMadeReadOnly.Local
-        private Menu config;
+        // ReSharper disable once FieldCanBeMadeReadOnly.Local       
 
         public Main()
         {
-            config = MainMenu.AddMenu("HumanizedBaseUlts", "humanizedBaseUlts");
-            config.Add("on", new CheckBox("Enabled"));
-            config.Add("min20", new CheckBox("20 min passed"));
-            config.Add("minDelay", new Slider("Minimum ultimate delay", 1000, 0, 2500));
-            config.AddLabel("The time to let the enemy regenerate health in base");
+            Listing.config = MainMenu.AddMenu("HumanizedBaseUlts", "humanizedBaseUlts");
+            Listing.config.Add("on", new CheckBox("Enabled"));
+            Listing.config.Add("min20", new CheckBox("20 min passed"));
+            Listing.config.Add("minDelay", new Slider("Minimum ultimate delay", 1000, 0, 2500));
+            Listing.config.AddLabel("The time to let the enemy regenerate health in base");
 
-            config.AddSeparator(20);
-            config.Add("fountainReg", new Slider("Fountain regeneration speed", 89, 85, 92));
-            config.Add("fountainRegMin20", new Slider("Fountain regeneration speed after minute 20", 366, 350, 370));
+            Listing.config.AddSeparator(20);
+            Listing.config.Add("fountainReg", new Slider("Fountain regeneration speed", 89, 85, 92));
+            Listing.config.Add("fountainRegMin20", new Slider("Fountain regeneration speed after minute 20", 366, 350, 370));
 
-            config.AddSeparator();
-            config.AddLabel("[Draven]");
-            config.Add("dravenCastBackBool", new CheckBox("Enable 'Draven Cast Back'"));
-            config.Add("dravenCastBackDelay", new Slider("Cast Back X ms earlier", 400, 0, 500));
+            Listing.config.AddSeparator();
+            Listing.config.AddLabel("[Draven]");
+            Listing.config.Add("dravenCastBackBool", new CheckBox("Enable 'Draven Cast Back'"));
+            Listing.config.Add("dravenCastBackDelay", new Slider("Cast Back X ms earlier", 400, 0, 500));
 
-            Listing.potionMenu = config.AddSubMenu("Potions", "potionsMenuasrfsdg");
+            Listing.potionMenu = Listing.config.AddSubMenu("Potions");
             Listing.potionMenu.AddLabel("[Regeneration Speed in HP/Sec.]");
             Listing.potionMenu.Add("healPotionRegVal", new Slider("Heal Potion / Cookie", 10, 5, 20));
             Listing.potionMenu.Add("crystalFlaskRegVal", new Slider("Crystal Flask", 10, 5, 20));
             Listing.potionMenu.Add("crystalFlaskJungleRegVal", new Slider("Crystal Flask Jungle", 9, 5, 20));
             Listing.potionMenu.Add("darkCrystalFlaskVal", new Slider("Dark Crystal Flask", 16, 5, 20));
 
-            Listing.snipeMenu = config.AddSubMenu("Enemy Recall Snipe", "snipeultimatesae3re");
+            Listing.snipeMenu = Listing.config.AddSubMenu("Enemy Recall Snipe");
             Listing.snipeMenu.AddLabel("[No premade feature currently]");
             Listing.snipeMenu.Add("snipeEnabled", new CheckBox("Enabled"));
             AddStringList(Listing.snipeMenu, "minSnipeHitChance", "Minimum Snipe HitChance", 
                 new []{ "Impossible", "Low", "Above Average", "Very High"}, 2);
 
-            Listing.allyconfig = config.AddSubMenu("Premades");
+            Listing.allyconfig = Listing.config.AddSubMenu("Premades");
             foreach (var ally in EntityManager.Heroes.Allies)
             {
                 if (Listing.spellDataList.Any(x => x.championName == ally.ChampionName))
@@ -95,7 +94,7 @@ namespace HumanziedBaseUlt
 
                 case TeleportStatus.Finish:
                     var teleportingEnemiesEntry2 = Listing.teleportingEnemies.First(x => x.Sender.Equals(sender));
-                    Core.DelayAction(() => Listing.teleportingEnemies.Remove(teleportingEnemiesEntry2), 5000);
+                    Core.DelayAction(() => Listing.teleportingEnemies.Remove(teleportingEnemiesEntry2), 10000);
                     break;
             }
         }
@@ -103,8 +102,6 @@ namespace HumanziedBaseUlt
         /*enemy appear*/
         private void OnOnEnemyVisible(AIHeroClient sender)
         {
-            Listing.Regeneration.enemyBuffs.Remove(sender);
-
             Listing.visibleEnemies.Add(sender);
             var invisEntry = Listing.invisEnemiesList.First(x => x.sender.Equals(sender));
             Listing.invisEnemiesList.Remove(invisEntry);
@@ -117,9 +114,6 @@ namespace HumanziedBaseUlt
         /*enemy disappear*/
         private void OnOnEnemyInvisible(InvisibleEventArgs args)
         {
-            if (Listing.Regeneration.HasPotionActive(args.sender))
-                Listing.Regeneration.enemyBuffs.Add(args.sender, Listing.Regeneration.GetPotionBuff(args.sender));
-
             Listing.visibleEnemies.Remove(args.sender);
             Listing.invisEnemiesList.Add(args);
 
@@ -129,10 +123,8 @@ namespace HumanziedBaseUlt
 
         private void GameOnOnUpdate(EventArgs args)
         {
-            config.Get<CheckBox>("min20").CurrentValue = Game.Time > 1225f;
+            Listing.config.Get<CheckBox>("min20").CurrentValue = Game.Time > 1225f;
 
-
-            Listing.Regeneration.UpdateEnemyNormalRegenartions();
             UpdateEnemyVisibility();
             Listing.Pathing.UpdateEnemyPaths();
             CheckRecallingEnemies();
@@ -140,7 +132,7 @@ namespace HumanziedBaseUlt
 
         private void CheckRecallingEnemies()
         {
-            if (!config.Get<CheckBox>("on").CurrentValue)
+            if (!Listing.config.Get<CheckBox>("on").CurrentValue)
                 return;
 
             foreach (Listing.PortingEnemy enemyInst in Listing.teleportingEnemies.OrderBy(
@@ -154,19 +146,18 @@ namespace HumanziedBaseUlt
                 float travelTime = Algorithm.GetUltTravelTime(me);
 
                 float regedHealthRecallFinished = Algorithm.SimulateHealthRegen(enemy, invisEntry.StartTime, recallEndTime);
-                float totalEnemyHp = enemy.Health + regedHealthRecallFinished;
-                float fountainReg = GetFountainReg(enemy);
+                float totalEnemyHOnRecallEnd = enemy.Health + regedHealthRecallFinished;
 
                 float aioDmg = Damage.GetAioDmg(enemy, timeLeft);
 
-                if (aioDmg > totalEnemyHp)
+                if (aioDmg > totalEnemyHOnRecallEnd)
                 {
                     /*contains own enemy hp reg during fly delay*/
-                    float realDelayTime = Algorithm.SimulateRealDelayTime(enemy, recallEndTime, aioDmg, fountainReg);
+                    float realDelayTime = Algorithm.SimulateRealDelayTime(enemy, recallEndTime, aioDmg);
 
-                    if (realDelayTime < config.Get<Slider>("minDelay").CurrentValue)
+                    if (realDelayTime < Listing.config.Get<Slider>("minDelay").CurrentValue)
                     {
-                        Chat.Print("<font color=\"#0cf006\">Delay too low: " + realDelayTime + "ms</font>");
+                        //Chat.Print("<font color=\"#0cf006\">Delay too low: " + realDelayTime + "ms</font>");
                         continue;
                     }
 
@@ -182,12 +173,15 @@ namespace HumanziedBaseUlt
 
                             Core.DelayAction(() => 
                             {
+                                if (Listing.teleportingEnemies.All(x => x.Sender != enemy))
+                                    return;
+
                                 Player.CastSpell(SpellSlot.R, enemyBaseVec);
 
                                 /*Draven*/
-                                if (config.Get<CheckBox>("dravenCastBackBool").CurrentValue)
+                                if (Listing.config.Get<CheckBox>("dravenCastBackBool").CurrentValue)
                                 {
-                                    int castBackReduction = config.Get<Slider>("dravenCastBackDelay").CurrentValue;
+                                    int castBackReduction = Listing.config.Get<Slider>("dravenCastBackDelay").CurrentValue;
                                     float travelTime2 = Algorithm.GetUltTravelTime(me);
                                     if (me.ChampionName == "Draven")
                                         Core.DelayAction(() =>
@@ -197,30 +191,13 @@ namespace HumanziedBaseUlt
                                 }
                                 /*Draven*/
                             }, 
-                            (int)Math.Floor(delay));
+                            (int)delay);
+                            //Debug.Init(enemy, Algorithm.GetLastEstimatedEnemyReg(), aioDmg);
                         }
                     }
                 }
             }
         }
-
-        /// <summary>
-        /// per second
-        /// </summary>
-        /// <param name="enemy"></param>
-        /// <returns></returns>
-        private float GetFountainReg(AIHeroClient enemy)
-        {
-            float regSpeedDefault = config.Get<Slider>("fountainReg").CurrentValue / 10;
-            float regSpeedMin20 = config.Get<Slider>("fountainRegMin20").CurrentValue / 10;
-
-
-            float fountainReg = config.Get<CheckBox>("min20").CurrentValue ? enemy.MaxHealth / 100 * regSpeedMin20 : 
-                                    enemy.MaxHealth / 100 * regSpeedDefault;
-
-            return fountainReg;
-        }
-
         private void UpdateEnemyVisibility()
         {
             foreach (var enemy in EntityManager.Heroes.Enemies)
@@ -235,7 +212,6 @@ namespace HumanziedBaseUlt
                     {
                         StartTime = Core.GameTickCount,
                         sender = enemy,
-                        StdHealthRegen = Listing.Regeneration.lastEnemyRegens[enemy],
                         LastRealPath = Listing.Pathing.GetLastEnemyPath(enemy)
                     });
                 }

@@ -158,8 +158,8 @@ namespace HumanziedBaseUlt
             float timeLeft = recallEnd - Core.GameTickCount;
             float travelTime = Algorithm.GetUltTravelTime(ObjectManager.Player, CastPosition);
 
-            bool enoughDmg = Damage.GetBaseUltSpellDamage(target, ObjectManager.Player) > totalEnemyHp;
-            bool intime = travelTime < timeLeft;
+            bool enoughDmg = Damage.GetAioDmg(target, timeLeft, CastPosition) > totalEnemyHp;
+            bool intime = travelTime <= timeLeft;
 
             if (intime && enoughDmg)
             {

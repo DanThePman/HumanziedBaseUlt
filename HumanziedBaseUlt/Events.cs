@@ -21,14 +21,14 @@ namespace HumanziedBaseUlt
 
         public delegate void OnEnemyInvisibleH(InvisibleEventArgs args);
         public static event OnEnemyInvisibleH OnEnemyInvisible;
-        protected virtual void FireOnEnemyInvisible(InvisibleEventArgs args)
+        protected void FireOnEnemyInvisible(InvisibleEventArgs args)
         {
             if (OnEnemyInvisible != null) OnEnemyInvisible(args);
         }
 
         public delegate void OnEnemyVisibleH(AIHeroClient sender);
         public static event OnEnemyVisibleH OnEnemyVisible;
-        protected virtual void FireOnEnemyVisible(AIHeroClient sender)
+        protected void FireOnEnemyVisible(AIHeroClient sender)
         {
             if (OnEnemyVisible != null) OnEnemyVisible(sender);
         }
