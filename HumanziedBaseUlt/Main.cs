@@ -25,7 +25,7 @@ namespace HumanziedBaseUlt
 
             Listing.config.AddSeparator(20);
             Listing.config.Add("fountainReg", new Slider("Fountain regeneration speed", 89, 85, 92));
-            Listing.config.Add("fountainRegMin20", new Slider("Fountain regeneration speed after minute 20", 366, 350, 370));
+            Listing.config.Add("fountainRegMin20", new Slider("Fountain regeneration speed after minute 20", 364, 350, 370));
 
             Listing.config.AddSeparator();
             Listing.config.AddLabel("[Draven]");
