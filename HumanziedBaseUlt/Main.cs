@@ -39,11 +39,15 @@ namespace HumanziedBaseUlt
             Listing.potionMenu.Add("crystalFlaskJungleRegVal", new Slider("Crystal Flask Jungle", 9, 5, 20));
             Listing.potionMenu.Add("darkCrystalFlaskVal", new Slider("Dark Crystal Flask", 16, 5, 20));
 
+
             Listing.snipeMenu = Listing.config.AddSubMenu("Enemy Recall Snipe");
-            Listing.snipeMenu.AddLabel("[No premade feature currently]");
+            Listing.snipeMenu.AddLabel("[Premade feature added, too]");
+
             Listing.snipeMenu.Add("snipeEnabled", new CheckBox("Enabled"));
             AddStringList(Listing.snipeMenu, "minSnipeHitChance", "Minimum Snipe HitChance", 
                 new []{ "Impossible", "Low", "Above Average", "Very High"}, 2);
+            Listing.snipeMenu.Add("snipeDraw", new CheckBox("Draw Snipe paths"));
+            Listing.snipeMenu.Add("snipeCinemaMode", new CheckBox("Cinematic mode ™"));
 
             Listing.allyconfig = Listing.config.AddSubMenu("Premades");
             foreach (var ally in EntityManager.Heroes.Allies)
@@ -117,7 +121,8 @@ namespace HumanziedBaseUlt
             Listing.visibleEnemies.Remove(args.sender);
             Listing.invisEnemiesList.Add(args);
 
-            if (Listing.snipeMenu["snipeEnabled"].Cast<CheckBox>().CurrentValue)
+            if (Listing.snipeMenu["snipeEnabled"].Cast<CheckBox>().CurrentValue && 
+                me.Spellbook.GetSpell(SpellSlot.R).IsReady && me.Mana >= 100)
                 Listing.Pathing.enemySnipeProcs.Add(new SnipePrediction(args));
         }
 
@@ -192,7 +197,7 @@ namespace HumanziedBaseUlt
                                 /*Draven*/
                             }, 
                             (int)delay);
-                            //Debug.Init(enemy, Algorithm.GetLastEstimatedEnemyReg(), aioDmg);
+                            Debug.Init(enemy, Algorithm.GetLastEstimatedEnemyReg(), aioDmg);
                         }
                     }
                 }
