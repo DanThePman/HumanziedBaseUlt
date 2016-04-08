@@ -158,7 +158,7 @@ namespace HumanziedBaseUlt
         {
             bool infoExists = lastMessageSendTicksToAllies.ContainsKey(ally.ChampionName);
             if (infoExists)
-                return Environment.TickCount - lastMessageSendTicksToAllies[ally.ChampionName] >= 1000;
+                return Environment.TickCount - lastMessageSendTicksToAllies[ally.ChampionName] < 1000;
 
             return false;
         }
