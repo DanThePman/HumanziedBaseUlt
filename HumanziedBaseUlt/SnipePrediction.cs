@@ -227,7 +227,7 @@ namespace HumanziedBaseUlt
                 camAtProjectile)
             {
                 Camera.Locked = true;
-                Core.DelayAction(() => Camera.Locked = false, 10);
+                Core.DelayAction(() => Camera.Locked = false, 500);
                 return;
             }
 
