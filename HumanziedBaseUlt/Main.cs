@@ -53,6 +53,8 @@ namespace HumanziedBaseUlt
                 new []{ "Impossible", "Low", "Above Average", "Very High"}, 2);
             Listing.snipeMenu.Add("snipeDraw", new CheckBox("Draw Snipe paths"));
             Listing.snipeMenu.Add("snipeCinemaMode", new CheckBox("Cinematic mode ™"));
+            Listing.snipeMenu.Add("snipeAccuracy", new Slider("Accuracy", 10));
+            Listing.snipeMenu.AddLabel("Decrease to prevent FPS drops");
 
             Listing.allyconfig = Listing.config.AddSubMenu("Premades");
             foreach (var ally in EntityManager.Heroes.Allies)

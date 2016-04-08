@@ -168,12 +168,14 @@ namespace HumanziedBaseUlt
         /// <returns></returns>
         private Vector3 GetCastPosition(float walkedDist)
         {
+            float accuracy = Listing.snipeMenu.Get<Slider>("snipeAccuracy").CurrentValue / 100;
+
             var pathDirVec = lastRealPath.Last() - lastRealPath.First();
 
             Vector3 bestPathDirVec = Vector3.Zero;
             float smallestDeltaDistToWalkDist = float.MaxValue;
 
-            for (float i = 0.9f; i >= 0.1f; i -= 0.1f)
+            for (float i = 1 - accuracy; i > 0; i -= accuracy)
             {
                 var shortPathDirVec = pathDirVec*i;
                 if (Math.Abs(shortPathDirVec.Length() - walkedDist) < smallestDeltaDistToWalkDist)

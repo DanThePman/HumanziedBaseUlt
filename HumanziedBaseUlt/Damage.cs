@@ -19,7 +19,6 @@ namespace HumanziedBaseUlt
         public static float GetAioDmg(AIHeroClient target, float timeLeft, Vector3 dest)
         {
             float dmg = 0;
-            List<string> alliesKillingAlone = new List<string>(4);
 
             foreach (var ally in EntityManager.Heroes.Allies.Where(x => x.IsValid))
             {
