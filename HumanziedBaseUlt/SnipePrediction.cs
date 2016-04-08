@@ -127,7 +127,7 @@ namespace HumanziedBaseUlt
                     }
                 }
 
-                float realDist = moveSpeed * (timeElapsed_ms/1000) /*offset*/;
+                float realDist = moveSpeed * (timeElapsed_ms/1000);
                 CastPosition = GetCastPosition(realDist);
                 lastEstimatedPosition = CastPosition;
             }

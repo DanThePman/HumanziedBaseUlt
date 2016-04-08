@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -31,6 +32,10 @@ namespace HumanziedBaseUlt
             Listing.config.AddLabel("[Draven]");
             Listing.config.Add("dravenCastBackBool", new CheckBox("Enable 'Draven Cast Back'"));
             Listing.config.Add("dravenCastBackDelay", new Slider("Cast Back X ms earlier", 400, 0, 500));
+
+            Listing.config.AddSeparator();
+            Listing.config.Add("allyMessaging", new CheckBox("Send information to premades"));
+            Listing.config.AddLabel("If only 1 person uses this addon the other one gets infromed via chat whisper");
 
             Listing.potionMenu = Listing.config.AddSubMenu("Potions");
             Listing.potionMenu.AddLabel("[Regeneration Speed in HP/Sec.]");
@@ -128,11 +133,15 @@ namespace HumanziedBaseUlt
 
         private void GameOnOnUpdate(EventArgs args)
         {
-            Listing.config.Get<CheckBox>("min20").CurrentValue = Game.Time > 1225f;
+            Listing.config.Get<CheckBox>("min20").CurrentValue = Game.Time > 1455;
 
             UpdateEnemyVisibility();
             Listing.Pathing.UpdateEnemyPaths();
             CheckRecallingEnemies();
+        }
+
+        Vector3 enemySpawn {
+            get { return ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position; }
         }
 
         private void CheckRecallingEnemies()
@@ -140,69 +149,84 @@ namespace HumanziedBaseUlt
             if (!Listing.config.Get<CheckBox>("on").CurrentValue)
                 return;
 
-            foreach (Listing.PortingEnemy enemyInst in Listing.teleportingEnemies.OrderBy(
-                x => x.Sender.Health - Damage.GetBaseUltSpellDamage(x.Sender, me)))
+            foreach (Listing.PortingEnemy enemyInst in Listing.teleportingEnemies.OrderBy(x => x.Sender.Health))
             {
                 var enemy = enemyInst.Sender;
                 InvisibleEventArgs invisEntry = Listing.invisEnemiesList.First(x => x.sender.Equals(enemy));
 
                 int recallEndTime = enemyInst.StartTick + enemyInst.Duration;
                 float timeLeft = recallEndTime - Core.GameTickCount;
-                float travelTime = Algorithm.GetUltTravelTime(me);
+                float travelTime = Algorithm.GetUltTravelTime(me, enemySpawn);
 
                 float regedHealthRecallFinished = Algorithm.SimulateHealthRegen(enemy, invisEntry.StartTime, recallEndTime);
                 float totalEnemyHOnRecallEnd = enemy.Health + regedHealthRecallFinished;
 
-                float aioDmg = Damage.GetAioDmg(enemy, timeLeft);
+                float aioDmg = Damage.GetAioDmg(enemy, timeLeft, enemySpawn);
+
+                /*contains own enemy hp reg during fly delay*/
+                float realDelayTime = Algorithm.SimulateRealDelayTime(enemy, recallEndTime, aioDmg);
+
+                if (realDelayTime < Listing.config.Get<Slider>("minDelay").CurrentValue)
+                {
+                    Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.DelayTooSmall, realDelayTime);
+                    continue;
+                }
 
                 if (aioDmg > totalEnemyHOnRecallEnd)
                 {
-                    /*contains own enemy hp reg during fly delay*/
-                    float realDelayTime = Algorithm.SimulateRealDelayTime(enemy, recallEndTime, aioDmg);
-
-                    if (realDelayTime < Listing.config.Get<Slider>("minDelay").CurrentValue)
-                    {
-                        //Chat.Print("<font color=\"#0cf006\">Delay too low: " + realDelayTime + "ms</font>");
-                        continue;
-                    }
-
-                    Messaging.ProcessInfo(realDelayTime, enemy.ChampionName);
-
-                    if (travelTime <= timeLeft)
-                    {
-                        if (!Algorithm.GetCollision(me.ChampionName).Any())
-                        {
-                            Vector3 enemyBaseVec =
-                                ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
-                            float delay = timeLeft + realDelayTime - travelTime;
-
-                            Core.DelayAction(() => 
-                            {
-                                if (Listing.teleportingEnemies.All(x => x.Sender != enemy))
-                                    return;
-
-                                Player.CastSpell(SpellSlot.R, enemyBaseVec);
-
-                                /*Draven*/
-                                if (Listing.config.Get<CheckBox>("dravenCastBackBool").CurrentValue)
-                                {
-                                    int castBackReduction = Listing.config.Get<Slider>("dravenCastBackDelay").CurrentValue;
-                                    float travelTime2 = Algorithm.GetUltTravelTime(me);
-                                    if (me.ChampionName == "Draven")
-                                        Core.DelayAction(() =>
-                                        {
-                                            Player.CastSpell(SpellSlot.R);
-                                        }, (int) (travelTime2 - castBackReduction));
-                                }
-                                /*Draven*/
-                            }, 
-                            (int)delay);
-                            Debug.Init(enemy, Algorithm.GetLastEstimatedEnemyReg(), aioDmg);
-                        }
-                    }
+                    CheckUltCast(enemy, timeLeft, travelTime, aioDmg, realDelayTime);
+                }
+                else /*not enough damage at all*/
+                {
+                    Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.NotEnougDamage, aioDmg);
                 }
             }
         }
+
+        private void CheckUltCast(AIHeroClient enemy, float timeLeft, float travelTime, float aioDmg, float regenerationDelayTime)
+        {
+            Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.DelayInfo, regenerationDelayTime);
+
+            if (travelTime < timeLeft + regenerationDelayTime)
+            {
+                Vector3 enemyBaseVec =
+                    ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
+                float delay = timeLeft + regenerationDelayTime - travelTime;
+
+                Core.DelayAction(() =>
+                {
+                    if (Listing.teleportingEnemies.All(x => x.Sender != enemy))
+                        return;
+
+                    Player.CastSpell(SpellSlot.R, enemyBaseVec);
+
+                    /*Draven*/
+                    if (Listing.config.Get<CheckBox>("dravenCastBackBool").CurrentValue)
+                    {
+                        int castBackReduction = Listing.config.Get<Slider>("dravenCastBackDelay").CurrentValue;
+                        if (me.ChampionName == "Draven")
+                            Core.DelayAction(() =>
+                            {
+                                Player.CastSpell(SpellSlot.R);
+                            }, (int)(travelTime - castBackReduction));
+                    }
+                    /*Draven*/
+                },
+                (int)delay);
+                Debug.Init(enemy, Algorithm.GetLastEstimatedEnemyReg(), aioDmg);
+            }
+            else /*not enough time for me*/
+            {
+                float param = travelTime - (timeLeft + regenerationDelayTime);
+                Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.NotEnoughTime, param);
+            }
+
+
+            //Cleaning
+            AllyMessaging.SendBaseUltInfoToAllies(timeLeft, regenerationDelayTime);
+            Listing.teleportingEnemies.RemoveAll(x => x.Sender.ChampionName != enemy.ChampionName);
+        }
+
         private void UpdateEnemyVisibility()
         {
             foreach (var enemy in EntityManager.Heroes.Enemies)
