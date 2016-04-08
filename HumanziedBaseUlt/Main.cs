@@ -176,7 +176,7 @@ namespace HumanziedBaseUlt
 
                     CheckUltCast(enemy, timeLeft, travelTime, aioDmg, realDelayTime);
                 }
-                else /*not enough damage at all*/if (me.Level >= 6)
+                else /*not enough damage at all*/if (aioDmg > 0)
                 {
                     Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.NotEnougDamage, aioDmg);
                 }
