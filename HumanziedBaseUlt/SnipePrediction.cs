@@ -217,12 +217,21 @@ namespace HumanziedBaseUlt
 
         private void MoveCamera(EventArgs args)
         {
-            if (EntityManager.Heroes.Enemies.Any(x => x.Distance(ObjectManager.Player) <= 1000 && x.IsValid))
-                return;
-
             var ultMissile = ObjectManager.Get<MissileClient>()
                 .First(x => x.IsAlly && x.IsValidMissile() && x.SpellCaster is AIHeroClient &&
-                            ((AIHeroClient) x.SpellCaster).IsMe);
+                            ((AIHeroClient)x.SpellCaster).IsMe);
+            Vector2 camPos = new Vector2(Camera.CameraX, Camera.CameraY);
+
+            bool camAtProjectile = camPos.Distance(ultMissile.Position) <= 150;
+            if (EntityManager.Heroes.Enemies.Any(x => x.Distance(ObjectManager.Player) <= 1000 && x.IsValid) && 
+                camAtProjectile)
+            {
+                Camera.Locked = true;
+                Core.DelayAction(() => Camera.Locked = false, 10);
+                return;
+            }
+
+            
 
             Camera.CameraX = ultMissile.Position.X;
             Camera.CameraY = ultMissile.Position.Y;
