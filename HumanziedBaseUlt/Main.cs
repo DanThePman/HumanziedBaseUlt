@@ -166,14 +166,14 @@ namespace HumanziedBaseUlt
                 /*contains own enemy hp reg during fly delay*/
                 float realDelayTime = Algorithm.SimulateRealDelayTime(enemy, recallEndTime, aioDmg);
 
-                if (realDelayTime < Listing.config.Get<Slider>("minDelay").CurrentValue)
-                {
-                    Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.DelayTooSmall, realDelayTime);
-                    continue;
-                }
-
                 if (aioDmg > totalEnemyHOnRecallEnd)
                 {
+                    if (realDelayTime < Listing.config.Get<Slider>("minDelay").CurrentValue)
+                    {
+                        Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.DelayTooSmall, realDelayTime);
+                        continue;
+                    }
+
                     CheckUltCast(enemy, timeLeft, travelTime, aioDmg, realDelayTime);
                 }
                 else /*not enough damage at all*/

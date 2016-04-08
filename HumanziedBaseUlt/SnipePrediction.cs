@@ -48,6 +48,7 @@ namespace HumanziedBaseUlt
                 SnipeChance = HitChance.Impossible;
                 Teleport.OnTeleport -= SnipePredictionOnTeleport;
                 Drawing.OnDraw -= OnDraw;
+                MissileClient.OnDelete -= MissileClientOnOnDelete;
                 Game.OnUpdate -= MoveCamera;
             }
             catch
@@ -208,12 +209,19 @@ namespace HumanziedBaseUlt
                     Listing.spellDataList.First(x => x.championName == ObjectManager.Player.ChampionName).Delay;
 
                 if (Listing.snipeMenu.Get<CheckBox>("snipeCinemaMode").CurrentValue)
-                    Core.DelayAction(()=> Game.OnUpdate += MoveCamera, (int)castDelay);
+                    Core.DelayAction(() =>
+                    {
+                        Game.OnUpdate += MoveCamera;
+                        MissileClient.OnDelete += MissileClientOnOnDelete;
+                    }, (int)castDelay);
+
                 Core.DelayAction(CancelProcess, (int)(castDelay + travelTime) + 2000);
             }
             else
                 CancelProcess();
         }
+
+        string LastUltMissileName { get; set; }
 
         private void MoveCamera(EventArgs args)
         {
@@ -221,6 +229,8 @@ namespace HumanziedBaseUlt
                 .First(x => x.IsAlly && x.IsValidMissile() && x.SpellCaster is AIHeroClient &&
                             ((AIHeroClient)x.SpellCaster).IsMe);
             Vector2 camPos = new Vector2(Camera.CameraX, Camera.CameraY);
+
+            LastUltMissileName = ultMissile.Name;
 
             bool camAtProjectile = camPos.Distance(ultMissile.Position) <= 150;
             if (EntityManager.Heroes.Enemies.Any(x => x.Distance(ObjectManager.Player) <= 1000 && x.IsValid) && 
@@ -235,6 +245,19 @@ namespace HumanziedBaseUlt
 
             Camera.CameraX = ultMissile.Position.X;
             Camera.CameraY = ultMissile.Position.Y;
+        }
+
+        private void MissileClientOnOnDelete(GameObject sender, EventArgs args)
+        {
+            var missile = sender as MissileClient;
+            var caster = missile.SpellCaster;
+            bool myUltMissile = missile.Name == LastUltMissileName;
+
+            if (caster is AIHeroClient && ((AIHeroClient) caster).IsMe && myUltMissile)
+            {
+                Camera.Locked = true;
+                Core.DelayAction(() => Camera.Locked = false, 500);
+            }
         }
     }
 }
