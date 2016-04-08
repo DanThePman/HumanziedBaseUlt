@@ -48,7 +48,6 @@ namespace HumanziedBaseUlt
                 SnipeChance = HitChance.Impossible;
                 Teleport.OnTeleport -= SnipePredictionOnTeleport;
                 Drawing.OnDraw -= OnDraw;
-                MissileClient.OnDelete -= MissileClientOnOnDelete;
                 Game.OnUpdate -= MoveCamera;
             }
             catch
@@ -212,10 +211,14 @@ namespace HumanziedBaseUlt
                     Core.DelayAction(() =>
                     {
                         Game.OnUpdate += MoveCamera;
-                        MissileClient.OnDelete += MissileClientOnOnDelete;
                     }, (int)castDelay);
 
-                Core.DelayAction(CancelProcess, (int)(castDelay + travelTime) + 2000);
+                Core.DelayAction(() =>
+                {
+                    CancelProcess();
+                    Camera.CameraX = ObjectManager.Player.Position.X;
+                    Camera.CameraY = ObjectManager.Player.Position.Y;
+                }, (int)(castDelay + travelTime) + 500);
             }
             else
                 CancelProcess();
@@ -245,19 +248,6 @@ namespace HumanziedBaseUlt
 
             Camera.CameraX = ultMissile.Position.X;
             Camera.CameraY = ultMissile.Position.Y;
-        }
-
-        private void MissileClientOnOnDelete(GameObject sender, EventArgs args)
-        {
-            var missile = sender as MissileClient;
-            var caster = missile.SpellCaster;
-            bool myUltMissile = missile.Name == LastUltMissileName;
-
-            if (caster is AIHeroClient && ((AIHeroClient) caster).IsMe && myUltMissile)
-            {
-                Camera.Locked = true;
-                Core.DelayAction(() => Camera.Locked = false, 500);
-            }
         }
     }
 }
