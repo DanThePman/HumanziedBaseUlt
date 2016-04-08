@@ -239,8 +239,8 @@ namespace HumanziedBaseUlt
             if (EntityManager.Heroes.Enemies.Any(x => x.Distance(ObjectManager.Player) <= 1000 && x.IsValid) && 
                 camAtProjectile)
             {
-                Camera.Locked = true;
-                Core.DelayAction(() => Camera.Locked = false, 500);
+                Camera.CameraX = ObjectManager.Player.Position.X;
+                Camera.CameraY = ObjectManager.Player.Position.Y;
                 return;
             }
 
