@@ -140,7 +140,7 @@ namespace HumanziedBaseUlt
                         {
                             OnMessageSent(ally);
                             int roundedDelay = (int)Math.Floor(delay) / 1000;
-                            Chat.Say(" BaseUlt CountDown of" + ally.ChampionName + ": " + roundedDelay);//QIDFJIASNGFETUNTaSFASIOGMJEWAUIGNeuinU3t978jemri38nr
+                            //Chat.Say(" BaseUlt CountDown of" + ally.ChampionName + ": " + roundedDelay);//QIDFJIASNGFETUNTaSFASIOGMJEWAUIGNeuinU3t978jemri38nr
                         }
                     }
                 }
