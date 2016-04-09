@@ -22,6 +22,7 @@ namespace HumanziedBaseUlt
             Listing.config.Add("min20", new CheckBox("20 min passed"));
             Listing.config.Add("minDelay", new Slider("Minimum ultimate delay", 1000, 0, 2500));
             Listing.config.AddLabel("The time to let the enemy regenerate health in base");
+            Listing.config.Add("humanizedDelayOff", new CheckBox("TURN OFF HUMANIZED DELAY", false));
 
             Listing.config.AddSeparator(20);
             Listing.config.Add("fountainReg", new Slider("Fountain regeneration speed", 89, 50, 100));

@@ -88,7 +88,7 @@ namespace HumanziedBaseUlt
 
             lastEnemyReg = regedRecallEnd + fountainReg * (normalDelay / 1000);
 
-            return normalDelay;
+            return Listing.config.Get<CheckBox>("humanizedDelayOff").CurrentValue ? 0 : normalDelay;
         }
 
         public static float GetLastEstimatedEnemyReg()
