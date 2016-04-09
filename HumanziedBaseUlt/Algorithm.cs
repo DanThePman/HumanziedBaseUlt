@@ -97,7 +97,7 @@ namespace HumanziedBaseUlt
             if (sourceName == "Ezreal")
                 return new List<Obj_AI_Base>();
 
-            var heroEntry = Listing.spellDataList.First(x => x.championName == sourceName);
+            var heroEntry = Listing.UltSpellDataList[sourceName];
             Vector3 enemyBaseVec = dest ?? ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
 
             return (from unit in EntityManager.Heroes.Enemies.Where(h => ObjectManager.Player.Distance(h) < 2000)
@@ -115,8 +115,8 @@ namespace HumanziedBaseUlt
             try
             {
                 var targetpos = dest;
-                float speed = Listing.spellDataList.First(x => x.championName == source.ChampionName).Speed;
-                float delay = Listing.spellDataList.First(x => x.championName == source.ChampionName).Delay;
+                float speed = Listing.UltSpellDataList[source.ChampionName].Speed;
+                float delay = Listing.UltSpellDataList[source.ChampionName].Delay;
 
 
                 float distance = source.ServerPosition.Distance(targetpos);

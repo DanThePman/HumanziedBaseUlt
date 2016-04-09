@@ -28,14 +28,6 @@ namespace HumanziedBaseUlt
             Listing.config.Add("fountainReg", new Slider("Fountain regeneration speed", 89, 85, 92));
             Listing.config.Add("fountainRegMin20", new Slider("Fountain regeneration speed after minute 20", 364, 350, 370));
 
-            Listing.config.AddSeparator();
-            Listing.config.AddLabel("[Draven]");
-            Listing.config.Add("dravenCastBackBool", new CheckBox("Enable 'Draven Cast Back'"));
-            Listing.config.Add("dravenCastBackDelay", new Slider("Cast Back X ms earlier", 400, 0, 500));
-
-            Listing.config.AddSeparator();
-            Listing.config.Add("allyMessaging", new CheckBox("Send information to premades"));
-            Listing.config.AddLabel("If only 1 person uses this addon the other one gets infromed via chat whisper");
 
             Listing.potionMenu = Listing.config.AddSubMenu("Potions");
             Listing.potionMenu.AddLabel("[Regeneration Speed in HP/Sec.]");
@@ -59,9 +51,23 @@ namespace HumanziedBaseUlt
             Listing.allyconfig = Listing.config.AddSubMenu("Premades");
             foreach (var ally in EntityManager.Heroes.Allies)
             {
-                if (Listing.spellDataList.Any(x => x.championName == ally.ChampionName))
+                if (Listing.UltSpellDataList.Any(x => x.Key == ally.ChampionName))
                     Listing.allyconfig.Add(ally.ChampionName + "/Premade", new CheckBox(ally.ChampionName, ally.IsMe));
             }
+
+
+            Listing.MiscMenu = Listing.config.AddSubMenu("Miscellaneous");
+            Listing.MiscMenu.AddLabel("[Draven]");
+            Listing.MiscMenu.Add("dravenCastBackBool", new CheckBox("Enable 'Draven Cast Back'"));
+            Listing.MiscMenu.Add("dravenCastBackDelay", new Slider("Cast Back X ms earlier", 400, 0, 500));
+
+            Listing.MiscMenu.AddSeparator();
+            Listing.MiscMenu.Add("allyMessaging", new CheckBox("Send information to premades"));
+            Listing.MiscMenu.AddLabel("If only 1 person uses this addon the other one gets infromed via chat whisper");
+
+            AddStringList(Listing.MiscMenu, "damageCalcMethod", "Damage Calculation Method", 
+                new [] {"Elobudddy", "Leaguesharp"}, 1);
+            Listing.MiscMenu.AddLabel("Elobuddy doesn't contain masteries atm :(");
 
             Game.OnUpdate += GameOnOnUpdate;
             Teleport.OnTeleport += TeleportOnOnTeleport;

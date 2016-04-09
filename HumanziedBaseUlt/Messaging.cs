@@ -121,8 +121,8 @@ namespace HumanziedBaseUlt
             foreach (var ally in EntityManager.Heroes.Allies.Where(x => x.IsValid))
             {
                 bool isGlobalUltChamp =
-                    Listing.spellDataList.Any(
-                        x => x.championName == ally.ChampionName && x.championName != ObjectManager.Player.ChampionName);
+                    Listing.UltSpellDataList.Any(
+                        x => x.Key == ally.ChampionName && x.Key != ObjectManager.Player.ChampionName);
                 if (isGlobalUltChamp)
                 {
                     string menuid = ally.ChampionName + "/Premade";
@@ -171,8 +171,8 @@ namespace HumanziedBaseUlt
             foreach (var ally in EntityManager.Heroes.Allies)
             {
                 bool isGlobalUltChamp =
-                    Listing.spellDataList.Any(
-                        x => x.championName == ally.ChampionName && x.championName != ObjectManager.Player.ChampionName);
+                    Listing.UltSpellDataList.Any(
+                        x => x.Key == ally.ChampionName && x.Key != ObjectManager.Player.ChampionName);
                 if (isGlobalUltChamp)
                 {
                     string menuid = ally.ChampionName + "/Premade";
