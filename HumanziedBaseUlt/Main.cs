@@ -25,8 +25,8 @@ namespace HumanziedBaseUlt
             Listing.config.AddLabel("The time to let the enemy regenerate health in base");
 
             Listing.config.AddSeparator(20);
-            Listing.config.Add("fountainReg", new Slider("Fountain regeneration speed", 89, 85, 92));
-            Listing.config.Add("fountainRegMin20", new Slider("Fountain regeneration speed after minute 20", 364, 350, 370));
+            Listing.config.Add("fountainReg", new Slider("Fountain regeneration speed", 89, 50, 100));
+            Listing.config.Add("fountainRegMin20", new Slider("Fountain regeneration speed after minute 20", 364, 350, 400));
 
 
             Listing.potionMenu = Listing.config.AddSubMenu("Potions");
