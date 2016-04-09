@@ -22,7 +22,7 @@ namespace HumanziedBaseUlt
             Listing.config.Add("min20", new CheckBox("20 min passed"));
             Listing.config.Add("minDelay", new Slider("Minimum ultimate delay", 1000, 0, 2500));
             Listing.config.AddLabel("The time to let the enemy regenerate health in base");
-            Listing.config.Add("humanizedDelayOff", new CheckBox("TURN OFF HUMANIZED DELAY", false));
+            Listing.config.Add("humanizedDelayOff", new CheckBox("TURN OFF HUMANIZED DELAY AT ALL", false));
 
             Listing.config.AddSeparator(20);
             Listing.config.Add("fountainReg", new Slider("Fountain regeneration speed", 89, 50, 100));
@@ -175,7 +175,8 @@ namespace HumanziedBaseUlt
 
                 if (aioDmg > totalEnemyHOnRecallEnd)
                 {
-                    if (regenerationDelayTime < Listing.config.Get<Slider>("minDelay").CurrentValue)
+                    if (regenerationDelayTime < Listing.config.Get<Slider>("minDelay").CurrentValue &&
+                        !Listing.config.Get<CheckBox>("humanizedDelayOff").CurrentValue)
                     {
                         Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.DelayTooSmall, regenerationDelayTime);
                         continue;
