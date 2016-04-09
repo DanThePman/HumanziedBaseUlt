@@ -71,8 +71,6 @@ namespace HumanziedBaseUlt
 
             Game.OnUpdate += GameOnOnUpdate;
             Teleport.OnTeleport += TeleportOnOnTeleport;
-            OnEnemyInvisible += OnOnEnemyInvisible;
-            OnEnemyVisible += OnOnEnemyVisible;
         }
 
         private void AddStringList(Menu m, string uniqueId, string displayName, string[] values, int defaultValue)
@@ -116,7 +114,7 @@ namespace HumanziedBaseUlt
             }
         }
               
-        /*enemy appear*/
+
         private void OnOnEnemyVisible(AIHeroClient sender)
         {
             Listing.visibleEnemies.Add(sender);
@@ -128,7 +126,7 @@ namespace HumanziedBaseUlt
             Listing.Pathing.enemySnipeProcs.Remove(sinpeEntry);
         }
         
-        /*enemy disappear*/
+
         private void OnOnEnemyInvisible(InvisibleEventArgs args)
         {
             Listing.visibleEnemies.Remove(args.sender);
@@ -182,7 +180,7 @@ namespace HumanziedBaseUlt
                         continue;
                     }
 
-                    CheckUltCast(enemy, timeLeft, travelTime, aioDmg, regenerationDelayTime);
+                    CheckUltCast(enemy, travelTime, aioDmg, regenerationDelayTime);
                 }
                 else if (aioDmg > 0) /*not enough damage at all (maybe not enough time?)*/
                 {
@@ -192,12 +190,13 @@ namespace HumanziedBaseUlt
             }
         }
 
-        private void CheckUltCast(AIHeroClient enemy, float timeLeft, float travelTime, float aioDmg, float regenerationDelayTime)
+        private void CheckUltCast(AIHeroClient enemy, float timeLeft, float aioDmg, float regenerationDelayTime)
         {
             if (Listing.config.Get<CheckBox>("humanizedDelayOff").CurrentValue)
                 regenerationDelayTime = 0;
 
             Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.DelayInfo, regenerationDelayTime);
+            float travelTime = Algorithm.GetUltTravelTime(me, enemySpawn);
 
             if (travelTime < timeLeft + regenerationDelayTime)
             {
@@ -240,11 +239,11 @@ namespace HumanziedBaseUlt
             {
                 if (enemy.IsHPBarRendered && !Listing.visibleEnemies.Contains(enemy))
                 {
-                    FireOnEnemyVisible(enemy);
+                    OnOnEnemyVisible(enemy);
                 }
                 else if (!enemy.IsHPBarRendered && Listing.visibleEnemies.Contains(enemy))
                 {
-                    FireOnEnemyInvisible(new InvisibleEventArgs
+                    OnOnEnemyInvisible(new InvisibleEventArgs
                     {
                         StartTime = Core.GameTickCount,
                         sender = enemy,

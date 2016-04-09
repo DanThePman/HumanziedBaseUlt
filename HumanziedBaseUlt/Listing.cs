@@ -55,7 +55,7 @@ namespace HumanziedBaseUlt
         public static readonly List<AIHeroClient> visibleEnemies = new List<AIHeroClient>(5);
         public static readonly List<Events.InvisibleEventArgs> invisEnemiesList = new List<Events.InvisibleEventArgs>(5);
 
-        public class Regeneration
+        public static class Regeneration
         {
             public static float GetNormalRegenRate(AIHeroClient enemy)
             {
@@ -171,10 +171,10 @@ namespace HumanziedBaseUlt
             }
         }
 
-        public class Pathing
+        public static class Pathing
         {
             public static readonly Dictionary<AIHeroClient, Vector3[]> enemiesPaths = new Dictionary<AIHeroClient, Vector3[]>(5);
-            public static List<SnipePrediction> enemySnipeProcs = new List<SnipePrediction>(5);
+            public static readonly List<SnipePrediction> enemySnipeProcs = new List<SnipePrediction>(5);
 
             public static void UpdateEnemyPaths()
             {
