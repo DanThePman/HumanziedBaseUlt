@@ -180,7 +180,7 @@ namespace HumanziedBaseUlt
                         continue;
                     }
 
-                    CheckUltCast(enemy, travelTime, aioDmg, regenerationDelayTime);
+                    CheckUltCast(enemy, timeLeft, aioDmg, regenerationDelayTime);
                 }
                 else if (aioDmg > 0) /*not enough damage at all (maybe not enough time?)*/
                 {
