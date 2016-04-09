@@ -170,7 +170,6 @@ namespace HumanziedBaseUlt
 
                 float aioDmg = Damage.GetAioDmg(enemy, timeLeft, enemySpawn);
 
-                /*contains own enemy hp reg during fly delay*/
                 float regenerationDelayTime = Algorithm.SimulateRealDelayTime(enemy, recallEndTime, aioDmg);
 
                 if (aioDmg > totalEnemyHOnRecallEnd)
