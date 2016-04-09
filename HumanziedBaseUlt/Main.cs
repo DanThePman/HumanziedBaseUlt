@@ -45,7 +45,7 @@ namespace HumanziedBaseUlt
                 new []{ "Impossible", "Low", "Above Average", "Very High"}, 2);
             Listing.snipeMenu.Add("snipeDraw", new CheckBox("Draw Snipe paths"));
             Listing.snipeMenu.Add("snipeCinemaMode", new CheckBox("Cinematic mode ™"));
-            Listing.snipeMenu.Add("snipeAccuracy", new Slider("Accuracy", 10));
+            Listing.snipeMenu.Add("snipeAccuracy", new Slider("Accuracy", 100));
             Listing.snipeMenu.AddLabel("Decrease to prevent FPS drops");
 
             Listing.allyconfig = Listing.config.AddSubMenu("Premades");
@@ -63,7 +63,7 @@ namespace HumanziedBaseUlt
 
             Listing.MiscMenu.AddSeparator();
             Listing.MiscMenu.Add("allyMessaging", new CheckBox("Send information to premades"));
-            Listing.MiscMenu.AddLabel("If only 1 person uses this addon the other one gets infromed via chat whisper");
+            Listing.MiscMenu.AddLabel("If only 1 person uses this addon the others get infromed via chat whisper");
 
             AddStringList(Listing.MiscMenu, "damageCalcMethod", "Damage Calculation Method", 
                 new [] {"Elobudddy", "Leaguesharp"}, 1);
@@ -194,6 +194,9 @@ namespace HumanziedBaseUlt
 
         private void CheckUltCast(AIHeroClient enemy, float timeLeft, float travelTime, float aioDmg, float regenerationDelayTime)
         {
+            if (Listing.config.Get<CheckBox>("humanizedDelayOff").CurrentValue)
+                regenerationDelayTime = 0;
+
             Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.DelayInfo, regenerationDelayTime);
 
             if (travelTime < timeLeft + regenerationDelayTime)
