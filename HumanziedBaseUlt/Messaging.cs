@@ -140,7 +140,7 @@ namespace HumanziedBaseUlt
                         {
                             OnMessageSent(ally);
                             int roundedDelay = (int)Math.Floor(delay) / 1000;
-                            //Chat.Say(" BaseUlt CountDown of" + ally.ChampionName + ": " + roundedDelay);//QIDFJIASNGFETUNTaSFASIOGMJEWAUIGNeuinU3t978jemri38nr
+                            Chat.Say("/w " + ally.Name + " " + roundedDelay);
                         }
                     }
                 }
@@ -180,7 +180,7 @@ namespace HumanziedBaseUlt
                     string menuid = ally.ChampionName + "/Premade";
                     if (Listing.allyconfig.Get<CheckBox>(menuid).CurrentValue)
                     {
-                        //Chat.Say("/w " + ally.Name + " " + msg);
+                        Chat.Say("/w " + ally.Name + " " + msg);
                     }
                 }
             }
