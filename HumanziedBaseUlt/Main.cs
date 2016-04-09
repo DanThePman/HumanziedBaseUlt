@@ -162,7 +162,6 @@ namespace HumanziedBaseUlt
 
                 int recallEndTime = portingEnemy.StartTick + portingEnemy.Duration;
                 float timeLeft = recallEndTime - Core.GameTickCount;
-                float travelTime = Algorithm.GetUltTravelTime(me, enemySpawn);
 
                 float regedHealthRecallFinished = Algorithm.SimulateHealthRegen(enemy, invisEntry.StartTime, recallEndTime);
                 float totalEnemyHOnRecallEnd = enemy.Health + regedHealthRecallFinished;
@@ -170,6 +169,9 @@ namespace HumanziedBaseUlt
                 float aioDmg = Damage.GetAioDmg(enemy, timeLeft, enemySpawn);
 
                 float regenerationDelayTime = Algorithm.SimulateRealDelayTime(enemy, recallEndTime, aioDmg);
+
+                Damage.SetRegenerationDelay(regenerationDelayTime, timeLeft);
+
 
                 if (aioDmg > totalEnemyHOnRecallEnd)
                 {
@@ -182,9 +184,8 @@ namespace HumanziedBaseUlt
 
                     CheckUltCast(enemy, timeLeft, aioDmg, regenerationDelayTime);
                 }
-                else if (aioDmg > 0) /*not enough damage at all (maybe not enough time?)*/
+                else if (aioDmg > 0)  //dmg there but not enough
                 {
-                    //dmg there but not enough
                     Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.NotEnougDamage, aioDmg);
                 }
             }
@@ -212,10 +213,9 @@ namespace HumanziedBaseUlt
                     Player.CastSpell(SpellSlot.R, enemyBaseVec);
 
                     /*Draven*/
-                    if (Listing.config.Get<CheckBox>("dravenCastBackBool").CurrentValue)
+                    if (Listing.config.Get<CheckBox>("dravenCastBackBool").CurrentValue && me.ChampionName == "Draven")
                     {
                         int castBackReduction = Listing.config.Get<Slider>("dravenCastBackDelay").CurrentValue;
-                        if (me.ChampionName == "Draven")
                             Core.DelayAction(() =>
                             {
                                 Player.CastSpell(SpellSlot.R);

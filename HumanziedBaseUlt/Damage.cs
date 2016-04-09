@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -10,6 +10,24 @@ namespace HumanziedBaseUlt
 {
     static class Damage
     {
+        private static float lastRegenDelay = 0;
+
+        /// <summary>
+        /// Set last known extra delay for premades -  If try would succeed
+        /// </summary>
+        /// <param name="delay"></param>
+        /// <param name="timeLeft"></param>
+        public static void SetRegenerationDelay(float delay, float timeLeft)
+        {
+            lastRegenDelay = delay;
+            Core.DelayAction(() => lastRegenDelay = 0, (int)Math.Ceiling(timeLeft + delay));
+        }
+
+        public static float GetRegenerationDelay()
+        {
+            return lastRegenDelay;
+        }
+
         /// <summary>
         /// list of premades, dmg
         /// </summary>
@@ -30,8 +48,12 @@ namespace HumanziedBaseUlt
                     if (Listing.allyconfig.Get<CheckBox>(menuid).CurrentValue)
                     {
                         float travelTime = Algorithm.GetUltTravelTime(ally, dest);
-                        bool canr = ally.Spellbook.GetSpell(SpellSlot.R).IsReady && ally.Mana >= 100;
-                        bool intime = travelTime <= timeLeft;
+
+                        var spell = ally.Spellbook.GetSpell(SpellSlot.R);
+                        var cooldown = spell.CooldownExpires - Game.Time;
+                        bool canr = cooldown <= 0 && ally.Mana >= 100;
+
+                        bool intime = travelTime <= timeLeft + lastRegenDelay;
 
                         if (canr && intime && !Algorithm.GetCollision(ally.ChampionName, dest).Any())
                         {

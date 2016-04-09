@@ -102,7 +102,7 @@ namespace HumanziedBaseUlt
     public static class AllyMessaging
     {
         private static bool Enabled {
-            get { return Listing.config.Get<CheckBox>("allyMessaging").CurrentValue; }
+            get { return Listing.MiscMenu.Get<CheckBox>("allyMessaging").CurrentValue; }
         }
 
         static Vector3 enemySpawn
@@ -115,8 +115,6 @@ namespace HumanziedBaseUlt
             if (!Enabled)
                 return;
 
-            timeLeft = timeLeft + regInBaseDelay;
-
             foreach (var ally in EntityManager.Heroes.Allies.Where(x => x.IsValid))
             {
                 bool isGlobalUltChamp =
@@ -128,16 +126,21 @@ namespace HumanziedBaseUlt
                     if (Listing.allyconfig.Get<CheckBox>(menuid).CurrentValue)
                     {
                         float travelTime = Algorithm.GetUltTravelTime(ally, enemySpawn);
-                        bool canr = ally.Spellbook.GetSpell(SpellSlot.R).IsReady && ally.Mana >= 100;
-                        bool intime = travelTime <= timeLeft;
-                        float delay = timeLeft - travelTime;
+
+                        var spell = ally.Spellbook.GetSpell(SpellSlot.R);
+                        var cooldown = spell.CooldownExpires - Game.Time;
+                        bool canr = cooldown <= 0 && ally.Mana >= 100;
+
+                        bool intime = travelTime <= timeLeft + regInBaseDelay;
+                        float delay = timeLeft + regInBaseDelay - travelTime;
                         bool collision = Algorithm.GetCollision(ally.ChampionName, enemySpawn).Any();
                         bool messageSpam = CheckMessageSpam(ally);
 
                         if (canr && intime && !collision && !messageSpam)
                         {
                             OnMessageSent(ally);
-                            Chat.Say("/w " + ally.Name + "BaseUlt CountDown:" + delay);
+                            int roundedDelay = (int)Math.Floor(delay) / 1000;
+                            Chat.Say(" BaseUlt CountDown of" + ally.ChampionName + ": " + roundedDelay);//QIDFJIASNGFETUNTaSFASIOGMJEWAUIGNeuinU3t978jemri38nr
                         }
                     }
                 }
@@ -157,7 +160,7 @@ namespace HumanziedBaseUlt
         {
             bool infoExists = lastMessageSendTicksToAllies.ContainsKey(ally.ChampionName);
             if (infoExists)
-                return Environment.TickCount - lastMessageSendTicksToAllies[ally.ChampionName] < 1000;
+                return Environment.TickCount - lastMessageSendTicksToAllies[ally.ChampionName] < 500;
 
             return false;
         }
@@ -177,7 +180,7 @@ namespace HumanziedBaseUlt
                     string menuid = ally.ChampionName + "/Premade";
                     if (Listing.allyconfig.Get<CheckBox>(menuid).CurrentValue)
                     {
-                        Chat.Say("/w " + ally.Name + " " + msg);
+                        //Chat.Say("/w " + ally.Name + " " + msg);
                     }
                 }
             }
