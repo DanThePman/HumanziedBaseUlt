@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
@@ -157,12 +156,12 @@ namespace HumanziedBaseUlt
             if (!Listing.config.Get<CheckBox>("on").CurrentValue)
                 return;
 
-            foreach (Listing.PortingEnemy enemyInst in Listing.teleportingEnemies.OrderBy(x => x.Sender.Health))
+            foreach (Listing.PortingEnemy portingEnemy in Listing.teleportingEnemies.OrderBy(x => x.Sender.Health))
             {
-                var enemy = enemyInst.Sender;
+                var enemy = portingEnemy.Sender;
                 InvisibleEventArgs invisEntry = Listing.invisEnemiesList.First(x => x.sender.Equals(enemy));
 
-                int recallEndTime = enemyInst.StartTick + enemyInst.Duration;
+                int recallEndTime = portingEnemy.StartTick + portingEnemy.Duration;
                 float timeLeft = recallEndTime - Core.GameTickCount;
                 float travelTime = Algorithm.GetUltTravelTime(me, enemySpawn);
 
@@ -172,20 +171,21 @@ namespace HumanziedBaseUlt
                 float aioDmg = Damage.GetAioDmg(enemy, timeLeft, enemySpawn);
 
                 /*contains own enemy hp reg during fly delay*/
-                float realDelayTime = Algorithm.SimulateRealDelayTime(enemy, recallEndTime, aioDmg);
+                float regenerationDelayTime = Algorithm.SimulateRealDelayTime(enemy, recallEndTime, aioDmg);
 
                 if (aioDmg > totalEnemyHOnRecallEnd)
                 {
-                    if (realDelayTime < Listing.config.Get<Slider>("minDelay").CurrentValue)
+                    if (regenerationDelayTime < Listing.config.Get<Slider>("minDelay").CurrentValue)
                     {
-                        Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.DelayTooSmall, realDelayTime);
+                        Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.DelayTooSmall, regenerationDelayTime);
                         continue;
                     }
 
-                    CheckUltCast(enemy, timeLeft, travelTime, aioDmg, realDelayTime);
+                    CheckUltCast(enemy, timeLeft, travelTime, aioDmg, regenerationDelayTime);
                 }
-                else /*not enough damage at all*/if (aioDmg > 0)
+                else if (aioDmg > 0) /*not enough damage at all (maybe not enough time?)*/
                 {
+                    //dmg there but not enough
                     Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.NotEnougDamage, aioDmg);
                 }
             }
@@ -222,11 +222,6 @@ namespace HumanziedBaseUlt
                 },
                 (int)delay);
                 Debug.Init(enemy, Algorithm.GetLastEstimatedEnemyReg(), aioDmg);
-            }
-            else /*not enough time for me*/
-            {
-                float param = travelTime - (timeLeft + regenerationDelayTime);
-                Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.NotEnoughTime, param);
             }
 
 
