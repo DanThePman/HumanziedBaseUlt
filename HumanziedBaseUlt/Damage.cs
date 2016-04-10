@@ -19,13 +19,21 @@ namespace HumanziedBaseUlt
         /// <param name="timeLeft"></param>
         public static void SetRegenerationDelay(float delay, float timeLeft)
         {
+            regenDelayIsSet = true;
             lastRegenDelay = delay;
-            Core.DelayAction(() => lastRegenDelay = 0, (int)Math.Ceiling(timeLeft + delay));
+
+            Core.DelayAction(() =>
+            {
+                lastRegenDelay = 0;
+                regenDelayIsSet = false;
+
+            }, (int)Math.Ceiling(timeLeft + delay));
         }
 
-        public static float GetRegenerationDelay()
+        private static bool regenDelayIsSet = false;
+        public static bool isRegenDelaySet
         {
-            return lastRegenDelay;
+            get { return regenDelayIsSet; }
         }
 
         /// <summary>
@@ -39,27 +47,60 @@ namespace HumanziedBaseUlt
         {
             float dmg = 0;
             bool elobuddyDamageMethod = Listing.MiscMenu.Get<Slider>("damageCalcMethod").CurrentValue == 0;
+            int premadesInvolvedCount = 0;
 
-            foreach (var ally in EntityManager.Heroes.Allies.Where(x => x.IsValid))
+            foreach (var ally in EntityManager.Heroes.Allies.Where(x => x.IsValid && !x.ChampionName.ToLower().Contains("karthus")))
             {
-                if (Listing.UltSpellDataList.Any(x => x.Key == ally.ChampionName))
+                bool isGlobalChamp = Listing.UltSpellDataList.Any(x => x.Key == ally.ChampionName);
+                if (!isGlobalChamp)
+                    continue;
+
+                string menuid = ally.ChampionName + "/Premade";
+                bool isPremade = Listing.allyconfig.Get<CheckBox>(menuid).CurrentValue;
+                if (!isPremade)
+                    continue;
+
+                var spell = ally.Spellbook.GetSpell(SpellSlot.R);
+                var cooldown = spell.CooldownExpires - Game.Time;
+
+                float travelTime = Algorithm.GetUltTravelTime(ally, dest);
+                bool intime = travelTime <= timeLeft + lastRegenDelay;
+                bool collision = Algorithm.GetCollision(ally.ChampionName, dest).Any();
+
+                float delay = timeLeft + lastRegenDelay - travelTime;
+                bool canr = cooldown <= delay/1000 && ally.Mana >= 100 && ally.Level >= 6;
+
+                if (canr && intime && !collision)
                 {
-                    string menuid = ally.ChampionName + "/Premade";
-                    if (Listing.allyconfig.Get<CheckBox>(menuid).CurrentValue)
+                    dmg += elobuddyDamageMethod ? GetBaseUltSpellDamage(target, ally) :
+                        (float)GetBaseUltSpellDamageAdvanced(target, ally);
+                    premadesInvolvedCount++;
+                }
+            }
+
+            var karthusAlly =
+                EntityManager.Heroes.Allies.FirstOrDefault(x => x.IsValid && x.ChampionName.ToLower().Contains("karthus"));
+
+            if (karthusAlly != null)
+            {
+                string karthusMenuid = karthusAlly.ChampionName + "/Premade";
+                bool isKarthusPremade = Listing.allyconfig.Get<CheckBox>(karthusMenuid).CurrentValue;
+
+                if (isKarthusPremade && premadesInvolvedCount > 0)
+                {
+                    var spell = karthusAlly.Spellbook.GetSpell(SpellSlot.R);
+                    var cooldown = spell.CooldownExpires - Game.Time;
+
+                    bool intimeKarthus = timeLeft + lastRegenDelay >= 4000;
+                    float delay = timeLeft + lastRegenDelay - 4000;
+
+                    bool canr = cooldown <= delay/1000 && karthusAlly.Mana >= 100 && karthusAlly.Level >= 6;
+
+                    if (canr && intimeKarthus)
                     {
-                        float travelTime = Algorithm.GetUltTravelTime(ally, dest);
-
-                        var spell = ally.Spellbook.GetSpell(SpellSlot.R);
-                        var cooldown = spell.CooldownExpires - Game.Time;
-                        bool canr = cooldown <= 0 && ally.Mana >= 100;
-
-                        bool intime = travelTime <= timeLeft + lastRegenDelay;
-
-                        if (canr && intime && !Algorithm.GetCollision(ally.ChampionName, dest).Any())
-                        {
-                            dmg += elobuddyDamageMethod ? GetBaseUltSpellDamage(target, ally) : 
-                                (float)GetBaseUltSpellDamageAdvanced(target, ally);
-                        }
+                        dmg += elobuddyDamageMethod
+                            ? DamageLibrary.GetSpellDamage(karthusAlly, target, SpellSlot.R)
+                            : (float)GetBaseUltSpellDamageAdvanced(target, karthusAlly);
                     }
                 }
             }

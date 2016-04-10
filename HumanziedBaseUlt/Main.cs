@@ -51,8 +51,10 @@ namespace HumanziedBaseUlt
             Listing.allyconfig = Listing.config.AddSubMenu("Premades");
             foreach (var ally in EntityManager.Heroes.Allies)
             {
+                bool isKarthus = ally.ChampionName.ToLower().Contains("karthus");
                 if (Listing.UltSpellDataList.Any(x => x.Key == ally.ChampionName))
-                    Listing.allyconfig.Add(ally.ChampionName + "/Premade", new CheckBox(ally.ChampionName, ally.IsMe));
+                    Listing.allyconfig.Add(ally.ChampionName + "/Premade", new CheckBox(!isKarthus ? ally.ChampionName :
+                       ally.ChampionName + " (Only for premade damage)", ally.IsMe));
             }
 
 
@@ -103,13 +105,15 @@ namespace HumanziedBaseUlt
                     }
                     break;
                 case TeleportStatus.Abort:
-                    var teleportingEnemiesEntry = Listing.teleportingEnemies.First(x => x.Sender.Equals(sender));
-                    Listing.teleportingEnemies.Remove(teleportingEnemiesEntry);
+                    var teleportingEnemiesEntry = Listing.teleportingEnemies.FirstOrDefault(x => x.Sender.Equals(sender));
+                    if (teleportingEnemiesEntry != null)
+                        Listing.teleportingEnemies.Remove(teleportingEnemiesEntry);
                     break;
 
                 case TeleportStatus.Finish:
-                    var teleportingEnemiesEntry2 = Listing.teleportingEnemies.First(x => x.Sender.Equals(sender));
-                    Core.DelayAction(() => Listing.teleportingEnemies.Remove(teleportingEnemiesEntry2), 10000);
+                    var teleportingEnemiesEntry2 = Listing.teleportingEnemies.FirstOrDefault(x => x.Sender.Equals(sender));
+                    if (teleportingEnemiesEntry2 != null)
+                        Core.DelayAction(() => Listing.teleportingEnemies.Remove(teleportingEnemiesEntry2), 10000);
                     break;
             }
         }
@@ -118,12 +122,18 @@ namespace HumanziedBaseUlt
         private void OnOnEnemyVisible(AIHeroClient sender)
         {
             Listing.visibleEnemies.Add(sender);
-            var invisEntry = Listing.invisEnemiesList.First(x => x.sender.Equals(sender));
-            Listing.invisEnemiesList.Remove(invisEntry);
+            var invisEntry = Listing.invisEnemiesList.FirstOrDefault(x => x.sender.Equals(sender));
 
-            var sinpeEntry = Listing.Pathing.enemySnipeProcs.FirstOrDefault(x => x.target == sender);
-            sinpeEntry.CancelProcess();
-            Listing.Pathing.enemySnipeProcs.Remove(sinpeEntry);
+            if (invisEntry != null)
+                Listing.invisEnemiesList.Remove(invisEntry);
+
+            var snipeEntry = Listing.Pathing.enemySnipeProcs.FirstOrDefault(x => x.target == sender);
+
+            if (snipeEntry != null)
+            {
+                snipeEntry.CancelProcess();
+                Listing.Pathing.enemySnipeProcs.Remove(snipeEntry);
+            }
         }
         
 
@@ -158,20 +168,28 @@ namespace HumanziedBaseUlt
             foreach (Listing.PortingEnemy portingEnemy in Listing.teleportingEnemies.OrderBy(x => x.Sender.Health))
             {
                 var enemy = portingEnemy.Sender;
-                InvisibleEventArgs invisEntry = Listing.invisEnemiesList.First(x => x.sender.Equals(enemy));
+                InvisibleEventArgs invisEntry = Listing.invisEnemiesList.FirstOrDefault(x => x.sender.Equals(enemy));
+
+                if (invisEntry == null) //enemy visible
+                    return;
 
                 int recallEndTime = portingEnemy.StartTick + portingEnemy.Duration;
                 float timeLeft = recallEndTime - Core.GameTickCount;
-
                 float regedHealthRecallFinished = Algorithm.SimulateHealthRegen(enemy, invisEntry.StartTime, recallEndTime);
                 float totalEnemyHOnRecallEnd = enemy.Health + regedHealthRecallFinished;
-
                 float aioDmg = Damage.GetAioDmg(enemy, timeLeft, enemySpawn);
-
                 float regenerationDelayTime = Algorithm.SimulateRealDelayTime(enemy, recallEndTime, aioDmg);
 
-                Damage.SetRegenerationDelay(regenerationDelayTime, timeLeft);
+                bool force0Delay = Listing.config.Get<CheckBox>("humanizedDelayOff").CurrentValue;
+                if (force0Delay)
+                    regenerationDelayTime = 0;
 
+                if (!Damage.isRegenDelaySet)
+                {
+                    Damage.SetRegenerationDelay(regenerationDelayTime, timeLeft);
+                    //new check but now with estimated reg delay
+                    aioDmg = Damage.GetAioDmg(enemy, timeLeft, enemySpawn);
+                }
 
                 if (aioDmg > totalEnemyHOnRecallEnd)
                 {
@@ -193,12 +211,10 @@ namespace HumanziedBaseUlt
 
         private void CheckUltCast(AIHeroClient enemy, float timeLeft, float aioDmg, float regenerationDelayTime)
         {
-            if (Listing.config.Get<CheckBox>("humanizedDelayOff").CurrentValue)
-                regenerationDelayTime = 0;
-
-            Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.DelayInfo, regenerationDelayTime);
+            Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.OwnDelayInfo, regenerationDelayTime);
             float travelTime = Algorithm.GetUltTravelTime(me, enemySpawn);
 
+            #region ownCheck
             if (travelTime < timeLeft + regenerationDelayTime)
             {
                 Vector3 enemyBaseVec =
@@ -226,11 +242,13 @@ namespace HumanziedBaseUlt
                 (int)delay);
                 Debug.Init(enemy, Algorithm.GetLastEstimatedEnemyReg(), aioDmg);
             }
+            #endregion ownCheck
 
 
             //Cleaning
-            AllyMessaging.SendBaseUltInfoToAllies(timeLeft, regenerationDelayTime);
             Listing.teleportingEnemies.RemoveAll(x => x.Sender.ChampionName != enemy.ChampionName);
+
+            AllyMessaging.SendBaseUltInfoToAllies(timeLeft, regenerationDelayTime);
         }
 
         private void UpdateEnemyVisibility()
