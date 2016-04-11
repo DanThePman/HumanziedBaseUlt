@@ -247,7 +247,6 @@ namespace HumanziedBaseUlt
 
             //Cleaning
             Listing.teleportingEnemies.RemoveAll(x => x.Sender.ChampionName != enemy.ChampionName);
-
             AllyMessaging.SendBaseUltInfoToAllies(timeLeft, regenerationDelayTime);
         }
 

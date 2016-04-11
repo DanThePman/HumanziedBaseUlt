@@ -49,7 +49,8 @@ namespace HumanziedBaseUlt
             bool elobuddyDamageMethod = Listing.MiscMenu.Get<Slider>("damageCalcMethod").CurrentValue == 0;
             int premadesInvolvedCount = 0;
 
-            foreach (var ally in EntityManager.Heroes.Allies.Where(x => x.IsValid && !x.ChampionName.ToLower().Contains("karthus")))
+            foreach (var ally in EntityManager.Heroes.Allies.Where(x =>
+                x.IsValid && x.Health > 0 && !x.ChampionName.ToLower().Contains("karthus")))
             {
                 bool isGlobalChamp = Listing.UltSpellDataList.Any(x => x.Key == ally.ChampionName);
                 if (!isGlobalChamp)

@@ -118,7 +118,7 @@ namespace HumanziedBaseUlt
             int premadesInvolvedCount = 0;
 
             foreach (var ally in EntityManager.Heroes.Allies.Where(
-                x => x.IsValid && !x.ChampionName.ToLower().Contains("karthus") && !x.IsMe))
+                x => x.IsValid && x.Health > 0 && !x.ChampionName.ToLower().Contains("karthus") && !x.IsMe))
             {
                 bool isGlobalChamp = Listing.UltSpellDataList.Any(x => x.Key == ally.ChampionName);
                 if (!isGlobalChamp)
@@ -225,7 +225,7 @@ namespace HumanziedBaseUlt
                     string menuid = ally.ChampionName + "/Premade";
                     if (Listing.allyconfig.Get<CheckBox>(menuid).CurrentValue)
                     {
-                        Chat.Say(ally.Name + " " + msg);
+                        Chat.Say("/w " + ally.Name + " " + msg);
                     }
                 }
             }
