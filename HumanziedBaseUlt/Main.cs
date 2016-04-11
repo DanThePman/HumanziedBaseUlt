@@ -154,7 +154,6 @@ namespace HumanziedBaseUlt
             UpdateEnemyVisibility();
             Listing.Pathing.UpdateEnemyPaths();
             CheckRecallingEnemies();
-            Chat.Say(Game.Time.ToString());
         }
 
         Vector3 enemySpawn {
