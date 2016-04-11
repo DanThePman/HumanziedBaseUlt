@@ -149,11 +149,12 @@ namespace HumanziedBaseUlt
 
         private void GameOnOnUpdate(EventArgs args)
         {
-            Listing.config.Get<CheckBox>("min20").CurrentValue = Game.Time > 1455;
+            Listing.config.Get<CheckBox>("min20").CurrentValue = Game.Time > 1221;
 
             UpdateEnemyVisibility();
             Listing.Pathing.UpdateEnemyPaths();
             CheckRecallingEnemies();
+            Chat.Say(Game.Time.ToString());
         }
 
         Vector3 enemySpawn {

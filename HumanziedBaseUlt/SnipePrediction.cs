@@ -201,7 +201,7 @@ namespace HumanziedBaseUlt
             float travelTime = Algorithm.GetUltTravelTime(ObjectManager.Player, CastPosition);
 
             bool enoughDmg = Damage.GetAioDmg(target, timeLeft, CastPosition) > totalEnemyHp;
-            bool intime = travelTime <= timeLeft;
+            bool intime = travelTime < timeLeft;
 
             if (intime && enoughDmg)
             {
