@@ -231,7 +231,7 @@ namespace HumanziedBaseUlt
                     /*Draven*/
                     if (Listing.MiscMenu.Get<CheckBox>("dravenCastBackBool").CurrentValue && me.ChampionName == "Draven")
                     {
-                        int castBackReduction = Listing.config.Get<Slider>("dravenCastBackDelay").CurrentValue;
+                        int castBackReduction = Listing.MiscMenu.Get<Slider>("dravenCastBackDelay").CurrentValue;
                             Core.DelayAction(() =>
                             {
                                 Player.CastSpell(SpellSlot.R);
