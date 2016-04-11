@@ -229,7 +229,7 @@ namespace HumanziedBaseUlt
                     Player.CastSpell(SpellSlot.R, enemyBaseVec);
 
                     /*Draven*/
-                    if (Listing.config.Get<CheckBox>("dravenCastBackBool").CurrentValue && me.ChampionName == "Draven")
+                    if (Listing.MiscMenu.Get<CheckBox>("dravenCastBackBool").CurrentValue && me.ChampionName == "Draven")
                     {
                         int castBackReduction = Listing.config.Get<Slider>("dravenCastBackDelay").CurrentValue;
                             Core.DelayAction(() =>
