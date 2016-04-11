@@ -46,7 +46,6 @@ namespace HumanziedBaseUlt
         public static float GetAioDmg(AIHeroClient target, float timeLeft, Vector3 dest)
         {
             float dmg = 0;
-            bool elobuddyDamageMethod = Listing.MiscMenu.Get<Slider>("damageCalcMethod").CurrentValue == 0;
             int premadesInvolvedCount = 0;
 
             foreach (var ally in EntityManager.Heroes.Allies.Where(x =>
@@ -73,8 +72,8 @@ namespace HumanziedBaseUlt
 
                 if (canr && intime && !collision)
                 {
-                    dmg += elobuddyDamageMethod ? GetBaseUltSpellDamage(target, ally) :
-                        (float)GetBaseUltSpellDamageAdvanced(target, ally);
+                    dmg += Math.Min(GetBaseUltSpellDamage(target, ally),
+                        (float)GetBaseUltSpellDamageAdvanced(target, ally));
                     premadesInvolvedCount++;
                 }
             }
@@ -99,19 +98,13 @@ namespace HumanziedBaseUlt
 
                     if (canr && intimeKarthus)
                     {
-                        dmg += elobuddyDamageMethod
-                            ? DamageLibrary.GetSpellDamage(karthusAlly, target, SpellSlot.R)
-                            : (float)GetBaseUltSpellDamageAdvanced(target, karthusAlly);
+                        dmg += Math.Min(GetBaseUltSpellDamage(target, karthusAlly),
+                                (float)GetBaseUltSpellDamageAdvanced(target, karthusAlly));
                     }
                 }
             }
 
             return dmg;
-        }
-
-        static Vector3 enemySpawn
-        {
-            get { return ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position; }
         }
 
         public static float GetBaseUltSpellDamage(AIHeroClient target, AIHeroClient source)

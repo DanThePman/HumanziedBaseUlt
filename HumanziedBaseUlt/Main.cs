@@ -67,9 +67,7 @@ namespace HumanziedBaseUlt
             Listing.MiscMenu.Add("allyMessaging", new CheckBox("Send information to premades"));
             Listing.MiscMenu.AddLabel("If only 1 person uses this addon the others get infromed via chat whisper");
 
-            AddStringList(Listing.MiscMenu, "damageCalcMethod", "Damage Calculation Method", 
-                new [] {"Elobudddy", "Leaguesharp"}, 1);
-            Listing.MiscMenu.AddLabel("Elobuddy doesn't contain masteries atm :(");
+            RecallTracker.RecallTracker.Init();
 
             Game.OnUpdate += GameOnOnUpdate;
             Teleport.OnTeleport += TeleportOnOnTeleport;
@@ -201,8 +199,10 @@ namespace HumanziedBaseUlt
                     }
 
                     CheckUltCast(enemy, timeLeft, aioDmg, regenerationDelayTime);
+                    return;
                 }
-                else if (aioDmg > 0)  //dmg there but not enough
+
+                if (aioDmg > 0)  //dmg there but not enough
                 {
                     Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.NotEnougDamage, aioDmg);
                 }
@@ -220,6 +220,12 @@ namespace HumanziedBaseUlt
                 Vector3 enemyBaseVec =
                     ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
                 float delay = timeLeft + regenerationDelayTime - travelTime;
+
+                if (RecallTracker.RecallTracker.Recalls.Any(x => x.Unit.ChampionName == enemy.ChampionName))
+                {
+                    var recall = RecallTracker.RecallTracker.Recalls.First(x => x.Unit.ChampionName == enemy.ChampionName);
+                    recall.SetBaseUltShootTime(Environment.TickCount + delay);
+                }
 
                 Core.DelayAction(() =>
                 {
