@@ -170,6 +170,7 @@ namespace HumanziedBaseUlt.DamageCalculation
             Smite
         }
 
+        private static float lastEstimatedTargetHealth = 0;
         /// <summary>
         ///     The spells
         /// </summary>
@@ -1354,7 +1355,7 @@ namespace HumanziedBaseUlt.DamageCalculation
                     var dmg = source.GetSpellDamage(target, SpellSlot.Q);
                     if (target.Type == GameObjectType.AIHeroClient && target.HasBuff("ShenQSlow"))
                     {
-                        dmg += source.GetSpellDamage(target, SpellSlot.Q, 1);
+                        dmg += (float)source.GetSpellDamage(target, SpellSlot.Q, target.Health, 1);
                     }
                     return dmg;
                 }
@@ -3739,7 +3740,7 @@ namespace HumanziedBaseUlt.DamageCalculation
                             (source, target, level) =>
                                 new double[] {25, 35, 45}[level]
                                 + new double[] {25, 30, 35}[level]/100
-                                *(target.MaxHealth - target.Health)
+                                *(target.MaxHealth - lastEstimatedTargetHealth)
                                 + 0.1*source.FlatPhysicalDamageMod
                     },
                     //R - Max
@@ -3752,7 +3753,7 @@ namespace HumanziedBaseUlt.DamageCalculation
                             (source, target, level) =>
                                 new double[] {250, 350, 450}[level]
                                 + new double[] {25, 30, 35}[level]/100
-                                *(target.MaxHealth - target.Health)
+                                *(target.MaxHealth - lastEstimatedTargetHealth)
                                 + 1*source.FlatPhysicalDamageMod
                     }
                 });
@@ -7768,8 +7769,11 @@ namespace HumanziedBaseUlt.DamageCalculation
         /// <param name="slot">The slot.</param>
         /// <param name="stage">The stage.</param>
         /// <returns></returns>
-        public static double GetSpellDamage(this AIHeroClient source, Obj_AI_Base target, SpellSlot slot, int stage = 0)
+        public static double GetSpellDamage(this AIHeroClient source, Obj_AI_Base target, SpellSlot slot,
+            float _lastEstimatedTargetHealth,
+            int stage = 0)
         {
+            lastEstimatedTargetHealth = _lastEstimatedTargetHealth;
             var spell = GetDamageSpell(source, target, slot, stage);
             return spell != null ? spell.CalculatedDamage : 0d;
         }

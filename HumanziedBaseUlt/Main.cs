@@ -45,7 +45,6 @@ namespace HumanziedBaseUlt
                 new []{ "Impossible", "Low", "Above Average", "Very High"}, 2);
             Listing.snipeMenu.Add("snipeDraw", new CheckBox("Draw Snipe paths"));
             Listing.snipeMenu.Add("snipeCinemaMode", new CheckBox("Cinematic mode ™"));
-            Listing.snipeMenu.Add("snipeAccuracy", new Slider("Accuracy", 100));
             Listing.snipeMenu.AddLabel("Decrease to prevent FPS drops");
 
             Listing.allyconfig = Listing.config.AddSubMenu("Premades");
@@ -140,9 +139,14 @@ namespace HumanziedBaseUlt
             Listing.visibleEnemies.Remove(args.sender);
             Listing.invisEnemiesList.Add(args);
 
-            if (Listing.snipeMenu["snipeEnabled"].Cast<CheckBox>().CurrentValue && 
-                me.Spellbook.GetSpell(SpellSlot.R).IsReady && me.Mana >= 100)
-                Listing.Pathing.enemySnipeProcs.Add(new SnipePrediction(args));
+            if (Listing.snipeMenu["snipeEnabled"].Cast<CheckBox>().CurrentValue)
+            {
+                var spell = me.Spellbook.GetSpell(SpellSlot.R);
+                var cooldown = spell.CooldownExpires - Game.Time;
+
+                if (cooldown <= 0 && me.Level >= 6)
+                    Listing.Pathing.enemySnipeProcs.Add(new SnipePrediction(args));
+            }
         }
 
         private void GameOnOnUpdate(EventArgs args)
@@ -175,7 +179,7 @@ namespace HumanziedBaseUlt
                 float timeLeft = recallEndTime - Core.GameTickCount;
                 float regedHealthRecallFinished = Algorithm.SimulateHealthRegen(enemy, invisEntry.StartTime, recallEndTime);
                 float totalEnemyHOnRecallEnd = enemy.Health + regedHealthRecallFinished;
-                float aioDmg = Damage.GetAioDmg(enemy, timeLeft, enemySpawn);
+                float aioDmg = Damage.GetAioDmg(enemy, timeLeft, enemySpawn, totalEnemyHOnRecallEnd);
                 float regenerationDelayTime = Algorithm.SimulateRealDelayTime(enemy, recallEndTime, aioDmg);
 
                 bool force0Delay = Listing.config.Get<CheckBox>("humanizedDelayOff").CurrentValue;
@@ -186,7 +190,9 @@ namespace HumanziedBaseUlt
                 {
                     Damage.SetRegenerationDelay(regenerationDelayTime, timeLeft);
                     //new check but now with estimated reg delay
-                    aioDmg = Damage.GetAioDmg(enemy, timeLeft, enemySpawn);
+                    float totalEnemyHpAtArrival = totalEnemyHOnRecallEnd +
+                                                  (regenerationDelayTime/1000)*Algorithm.GetFountainReg(enemy);
+                    aioDmg = Damage.GetAioDmg(enemy, timeLeft, enemySpawn, totalEnemyHpAtArrival);
                 }
 
                 if (aioDmg > totalEnemyHOnRecallEnd)
@@ -199,7 +205,7 @@ namespace HumanziedBaseUlt
                     }
 
                     CheckUltCast(enemy, timeLeft, aioDmg, regenerationDelayTime);
-                    return;
+                    return; //clear every porting enemy expect the current target and return => wait for next loop run
                 }
 
                 if (aioDmg > 0)  //dmg there but not enough

@@ -32,7 +32,7 @@ namespace HumanziedBaseUlt
 
         public static readonly Dictionary<string, UltSpellDataS> UltSpellDataList = new Dictionary<string, UltSpellDataS>
         {
-            {"Jinx",    new UltSpellDataS { SpellStage = 1, DamageMultiplicator = 0.86f, Width = 140f, Delay = 0600f/1000f, Speed = 1700f, Collision = true}},
+            {"Jinx",    new UltSpellDataS { SpellStage = 1, DamageMultiplicator = 1f, Width = 140f, Delay = 0600f/1000f, Speed = 1700f, Collision = true}},
             {"Ashe",    new UltSpellDataS { SpellStage = 0, DamageMultiplicator = 1.0f, Width = 130f, Delay = 0250f/1000f, Speed = 1600f, Collision = true}},
             {"Draven",  new UltSpellDataS { SpellStage = 0, DamageMultiplicator = 0.7f, Width = 160f, Delay = 0400f/1000f, Speed = 2000f, Collision = true}},
             {"Ezreal",  new UltSpellDataS { SpellStage = 0, DamageMultiplicator = 0.7f, Width = 160f, Delay = 1000f/1000f, Speed = 2000f, Collision = false}},

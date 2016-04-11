@@ -42,8 +42,9 @@ namespace HumanziedBaseUlt
         /// <param name="target"></param>
         /// <param name="timeLeft"></param>
         /// <param name="dest">Where the destination point is to check collision</param>
+        /// <param name="lastEstimatedTargetHealth">If end health after recall end is known, use it for jinx dmg calc</param>
         /// <returns></returns>
-        public static float GetAioDmg(AIHeroClient target, float timeLeft, Vector3 dest)
+        public static float GetAioDmg(AIHeroClient target, float timeLeft, Vector3 dest, float lastEstimatedTargetHealth)
         {
             float dmg = 0;
             int premadesInvolvedCount = 0;
@@ -72,8 +73,8 @@ namespace HumanziedBaseUlt
 
                 if (canr && intime && !collision)
                 {
-                    dmg += Math.Min(GetBaseUltSpellDamage(target, ally),
-                        (float)GetBaseUltSpellDamageAdvanced(target, ally));
+                    dmg += Math.Min(GetBaseUltSpellDamage(target, ally, lastEstimatedTargetHealth),
+                        (float)GetBaseUltSpellDamageAdvanced(target, ally, lastEstimatedTargetHealth));
                     premadesInvolvedCount++;
                 }
             }
@@ -98,8 +99,8 @@ namespace HumanziedBaseUlt
 
                     if (canr && intimeKarthus)
                     {
-                        dmg += Math.Min(GetBaseUltSpellDamage(target, karthusAlly),
-                                (float)GetBaseUltSpellDamageAdvanced(target, karthusAlly));
+                        dmg += Math.Min(GetBaseUltSpellDamage(target, karthusAlly, lastEstimatedTargetHealth),
+                                (float)GetBaseUltSpellDamageAdvanced(target, karthusAlly, lastEstimatedTargetHealth));
                     }
                 }
             }
@@ -107,7 +108,8 @@ namespace HumanziedBaseUlt
             return dmg;
         }
 
-        public static float GetBaseUltSpellDamage(AIHeroClient target, AIHeroClient source)
+        public static float GetBaseUltSpellDamage(AIHeroClient target, AIHeroClient source,
+            float lastEstimatedTargetHealth)
         {
             var level = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.R).Level - 1;
             float dmg = 0;
@@ -116,7 +118,7 @@ namespace HumanziedBaseUlt
             { 
                 {
                     var damage = new float[] {250, 350, 450}[level] +
-                                 new float[] {25, 30, 35}[level]/100*(target.MaxHealth - target.Health) +
+                                 new float[] {25, 30, 35}[level]/100*(target.MaxHealth - lastEstimatedTargetHealth) +
                                  ObjectManager.Player.FlatPhysicalDamageMod;
                     dmg = source.CalculateDamageOnUnit(target, DamageType.Physical, damage);
                 }
@@ -147,12 +149,13 @@ namespace HumanziedBaseUlt
             return dmg*0.7f;
         }
 
-        public static double GetBaseUltSpellDamageAdvanced(AIHeroClient target, AIHeroClient source)
+        public static double GetBaseUltSpellDamageAdvanced(AIHeroClient target, AIHeroClient source, 
+            float lastEstimatedTargetHealth)
         {
             float damageMultiplicator = Listing.UltSpellDataList[source.ChampionName].DamageMultiplicator;
             int spellStage = Listing.UltSpellDataList[source.ChampionName].SpellStage;
 
-            return source.GetSpellDamage(target, SpellSlot.R, spellStage)*damageMultiplicator;
+            return source.GetSpellDamage(target, SpellSlot.R, lastEstimatedTargetHealth, spellStage)*damageMultiplicator;
         }
     }
 }
