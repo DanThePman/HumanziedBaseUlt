@@ -142,7 +142,7 @@ namespace HumanziedBaseUlt
                         difference * 2200f) / distance;
                 }
 
-                return (distance / missilespeed + delay) * 1000 - 150;
+                return (distance / missilespeed + delay) * 1000;
             }
             catch
             {

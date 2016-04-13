@@ -26,12 +26,12 @@ namespace HumanziedBaseUlt
 
             Listing.config.AddSeparator(20);
             Listing.config.Add("fountainReg", new Slider("Fountain regeneration speed", 89, 50, 100));
-            Listing.config.Add("fountainRegMin20", new Slider("Fountain regeneration speed after minute 20", 364, 350, 400));
+            Listing.config.Add("fountainRegMin20", new Slider("Fountain regeneration speed after minute 20", 331, 300, 350));
 
 
             Listing.potionMenu = Listing.config.AddSubMenu("Potions");
             Listing.potionMenu.AddLabel("[Regeneration Speed in HP/Sec.]");
-            Listing.potionMenu.Add("healPotionRegVal", new Slider("Heal Potion / Cookie", 10, 5, 20));
+            Listing.potionMenu.Add("healPotionRegVal", new Slider("Heal Potion / Cookie", 11, 5, 20));
             Listing.potionMenu.Add("crystalFlaskRegVal", new Slider("Crystal Flask", 10, 5, 20));
             Listing.potionMenu.Add("crystalFlaskJungleRegVal", new Slider("Crystal Flask Jungle", 9, 5, 20));
             Listing.potionMenu.Add("darkCrystalFlaskVal", new Slider("Dark Crystal Flask", 16, 5, 20));
@@ -45,7 +45,6 @@ namespace HumanziedBaseUlt
                 new []{ "Impossible", "Low", "Above Average", "Very High"}, 2);
             Listing.snipeMenu.Add("snipeDraw", new CheckBox("Draw Snipe paths"));
             Listing.snipeMenu.Add("snipeCinemaMode", new CheckBox("Cinematic mode ™"));
-            Listing.snipeMenu.AddLabel("Decrease to prevent FPS drops");
 
             Listing.allyconfig = Listing.config.AddSubMenu("Premades");
             foreach (var ally in EntityManager.Heroes.Allies)
@@ -55,7 +54,7 @@ namespace HumanziedBaseUlt
                     Listing.allyconfig.Add(ally.ChampionName + "/Premade", new CheckBox(!isKarthus ? ally.ChampionName :
                        ally.ChampionName + " (Only for premade damage)", ally.IsMe));
             }
-
+            
 
             Listing.MiscMenu = Listing.config.AddSubMenu("Miscellaneous");
             Listing.MiscMenu.AddLabel("[Draven]");
@@ -220,38 +219,19 @@ namespace HumanziedBaseUlt
             Messaging.ProcessInfo(enemy.ChampionName, Messaging.MessagingType.OwnDelayInfo, regenerationDelayTime);
             float travelTime = Algorithm.GetUltTravelTime(me, enemySpawn);
 
+            float delay = timeLeft + regenerationDelayTime - travelTime;
+
             #region ownCheck
-            if (travelTime < timeLeft + regenerationDelayTime)
+            if (RecallTracker.RecallTracker.Recalls.Any(x => x.Unit.ChampionName == enemy.ChampionName))
             {
-                Vector3 enemyBaseVec =
-                    ObjectManager.Get<Obj_SpawnPoint>().First(x => x.IsEnemy).Position;
-                float delay = timeLeft + regenerationDelayTime - travelTime;
+                
+                var recall = RecallTracker.RecallTracker.Recalls.First(x => x.Unit.ChampionName == enemy.ChampionName);
+                recall.SetBaseUltShootTime(Environment.TickCount + delay);
+            }
 
-                if (RecallTracker.RecallTracker.Recalls.Any(x => x.Unit.ChampionName == enemy.ChampionName))
-                {
-                    var recall = RecallTracker.RecallTracker.Recalls.First(x => x.Unit.ChampionName == enemy.ChampionName);
-                    recall.SetBaseUltShootTime(Environment.TickCount + delay);
-                }
-
-                Core.DelayAction(() =>
-                {
-                    if (Listing.teleportingEnemies.All(x => x.Sender != enemy))
-                        return;
-
-                    Player.CastSpell(SpellSlot.R, enemyBaseVec);
-
-                    /*Draven*/
-                    if (Listing.MiscMenu.Get<CheckBox>("dravenCastBackBool").CurrentValue && me.ChampionName == "Draven")
-                    {
-                        int castBackReduction = Listing.MiscMenu.Get<Slider>("dravenCastBackDelay").CurrentValue;
-                            Core.DelayAction(() =>
-                            {
-                                Player.CastSpell(SpellSlot.R);
-                            }, (int)(travelTime - castBackReduction));
-                    }
-                    /*Draven*/
-                },
-                (int)delay);
+            if (travelTime > timeLeft + regenerationDelayTime && Damage.DidOwnChampWait)
+            {
+                CastUltInBase(enemy);
                 Debug.Init(enemy, Algorithm.GetLastEstimatedEnemyReg(), aioDmg);
             }
             #endregion ownCheck
@@ -260,6 +240,27 @@ namespace HumanziedBaseUlt
             //Cleaning
             Listing.teleportingEnemies.RemoveAll(x => x.Sender.ChampionName != enemy.ChampionName);
             AllyMessaging.SendBaseUltInfoToAllies(timeLeft, regenerationDelayTime);
+        }
+
+        private void CastUltInBase(AIHeroClient enemy)
+        {
+            float travelTime = Algorithm.GetUltTravelTime(me, enemySpawn);
+
+            if (Listing.teleportingEnemies.All(x => x.Sender != enemy))
+                return;
+
+            Player.CastSpell(SpellSlot.R, enemySpawn);
+
+            /*Draven*/
+            if (Listing.MiscMenu.Get<CheckBox>("dravenCastBackBool").CurrentValue && me.ChampionName == "Draven")
+            {
+                int castBackReduction = Listing.MiscMenu.Get<Slider>("dravenCastBackDelay").CurrentValue;
+                Core.DelayAction(() =>
+                {
+                    Player.CastSpell(SpellSlot.R);
+                }, (int)(travelTime - castBackReduction));
+            }
+            /*Draven*/
         }
 
         private void UpdateEnemyVisibility()

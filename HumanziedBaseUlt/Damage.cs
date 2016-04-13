@@ -3,11 +3,13 @@ using System.Linq;
 using EloBuddy;
 using EloBuddy.SDK;
 using EloBuddy.SDK.Menu.Values;
-using HumanziedBaseUlt.DamageCalculation;
 using SharpDX;
 
 namespace HumanziedBaseUlt
 {
+    /// <summary>
+    /// Core Damgage Calculation for the ultimates
+    /// </summary>
     static class Damage
     {
         private static float lastRegenDelay = 0;
@@ -26,7 +28,7 @@ namespace HumanziedBaseUlt
             {
                 lastRegenDelay = 0;
                 regenDelayIsSet = false;
-
+                ownChampWaited = false;
             }, (int)Math.Ceiling(timeLeft + delay));
         }
 
@@ -34,6 +36,12 @@ namespace HumanziedBaseUlt
         public static bool isRegenDelaySet
         {
             get { return regenDelayIsSet; }
+        }
+
+        private static bool ownChampWaited = false;
+        public static bool DidOwnChampWait
+        {
+            get { return ownChampWaited; }
         }
 
         /// <summary>
@@ -71,11 +79,13 @@ namespace HumanziedBaseUlt
                 float delay = timeLeft + lastRegenDelay - travelTime;
                 bool canr = cooldown <= delay/1000 && ally.Mana >= 100 && ally.Level >= 6;
 
-                if (canr && intime && !collision)
+                if (canr && (intime || ownChampWaited) && !collision)
                 {
-                    dmg += Math.Min(GetBaseUltSpellDamage(target, ally, lastEstimatedTargetHealth),
-                        (float)GetBaseUltSpellDamageAdvanced(target, ally, lastEstimatedTargetHealth));
+                    dmg += (float)GetBaseUltSpellDamage(target, ally, lastEstimatedTargetHealth);
                     premadesInvolvedCount++;
+                    if (ally.IsMe)
+                        ownChampWaited = true;
+
                 }
             }
 
@@ -97,16 +107,18 @@ namespace HumanziedBaseUlt
 
                     bool canr = cooldown <= delay/1000 && karthusAlly.Mana >= 100 && karthusAlly.Level >= 6;
 
-                    if (canr && intimeKarthus)
+                    if (canr && (intimeKarthus || ownChampWaited))
                     {
-                        dmg += Math.Min(GetBaseUltSpellDamage(target, karthusAlly, lastEstimatedTargetHealth),
-                                (float)GetBaseUltSpellDamageAdvanced(target, karthusAlly, lastEstimatedTargetHealth));
+                        dmg += (float)GetBaseUltSpellDamage(target, karthusAlly, lastEstimatedTargetHealth);
+                        if (karthusAlly.IsMe)
+                            ownChampWaited = true;
                     }
                 }
             }
 
             return dmg;
         }
+
 
         public static float GetBaseUltSpellDamage(AIHeroClient target, AIHeroClient source,
             float lastEstimatedTargetHealth)
@@ -146,16 +158,7 @@ namespace HumanziedBaseUlt
                 }
             }
 
-            return dmg*0.7f;
-        }
-
-        public static double GetBaseUltSpellDamageAdvanced(AIHeroClient target, AIHeroClient source, 
-            float lastEstimatedTargetHealth)
-        {
-            float damageMultiplicator = Listing.UltSpellDataList[source.ChampionName].DamageMultiplicator;
-            int spellStage = Listing.UltSpellDataList[source.ChampionName].SpellStage;
-
-            return source.GetSpellDamage(target, SpellSlot.R, lastEstimatedTargetHealth, spellStage)*damageMultiplicator;
+            return dmg*0.925f;
         }
     }
 }
